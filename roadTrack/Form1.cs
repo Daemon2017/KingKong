@@ -8,6 +8,7 @@ using System.Text;
 using AForge.Video.DirectShow;
 
 using MessagingToolkit.Barcode;
+using HtmlAgilityPack;
 
 namespace roadTrack
 {
@@ -44,9 +45,6 @@ namespace roadTrack
 
         private int[] statCountInc = new int[statLength];
         private int[] statCountDec = new int[statLength];
-
-        NetworkStream stream;
-        TcpClient client;
 
         private void button1_Click(object sender,
                                    EventArgs e)
@@ -89,16 +87,6 @@ namespace roadTrack
         private void Form1_FormClosed(object sender,
                                       FormClosedEventArgs e)
         {
-            if (stream != null)
-            {
-                stream.Close();
-            }
-
-            if (client != null)
-            {
-                client.Close();
-            }
-
             videoSourcePlayer1.Stop();
             timer1.Stop();
 
@@ -117,19 +105,6 @@ namespace roadTrack
                 DecodeBarcodeInc(workImage);
             }
 
-            if (lockedInc == true)
-            {
-                if (lockedIncCounter < 30)
-                {
-                    lockedIncCounter++;
-                }
-                else
-                {
-                    lockedInc = false;
-                    lockedIncCounter = 0;
-                }
-            }
-
             framesNumInc++;
         }
 
@@ -144,19 +119,6 @@ namespace roadTrack
                 DecodeBarcodeDec(workImage);
             }
 
-            if (lockedDec == true)
-            {
-                if (lockedDecCounter < 30)
-                {
-                    lockedDecCounter++;
-                }
-                else
-                {
-                    lockedDec = false;
-                    lockedDecCounter = 0;
-                }
-            }
-
             framesNumDec++;
         }
 
@@ -166,11 +128,8 @@ namespace roadTrack
             List<BarcodeFormat> possibleFormats = new List<BarcodeFormat>(1);
 
             possibleFormats.Add(BarcodeFormat.EAN13);
-
             decodingOptions.Add(DecodeOptions.PossibleFormats, possibleFormats);
-
             decodingOptions.Add(DecodeOptions.PureBarcode, "");
-
             decodingOptions.Add(DecodeOptions.AutoRotate, true);
 
             try
@@ -185,9 +144,20 @@ namespace roadTrack
                     }
                 }
             }
-            catch (BarcodeDecoderException)
+            catch (NotFoundException)
             {
-
+                if (lockedInc == true)
+                {
+                    if (lockedIncCounter < 30)
+                    {
+                        lockedIncCounter++;
+                    }
+                    else
+                    {
+                        lockedInc = false;
+                        lockedIncCounter = 0;
+                    }
+                }
             }
         }
 
@@ -197,11 +167,8 @@ namespace roadTrack
             List<BarcodeFormat> possibleFormats = new List<BarcodeFormat>(1);
 
             possibleFormats.Add(BarcodeFormat.EAN13);
-
             decodingOptions.Add(DecodeOptions.PossibleFormats, possibleFormats);
-
             decodingOptions.Add(DecodeOptions.PureBarcode, "");
-
             decodingOptions.Add(DecodeOptions.AutoRotate, true);
 
             try
@@ -216,9 +183,20 @@ namespace roadTrack
                     }
                 }
             }
-            catch (BarcodeDecoderException)
+            catch (NotFoundException)
             {
-
+                if (lockedDec == true)
+                {
+                    if (lockedDecCounter < 30)
+                    {
+                        lockedDecCounter++;
+                    }
+                    else
+                    {
+                        lockedDec = false;
+                        lockedDecCounter = 0;
+                    }
+                }
             }
         }
 
@@ -262,79 +240,46 @@ namespace roadTrack
             }
             else
             {
-                try
+                HtmlWeb hw = new HtmlWeb();
+                HtmlAgilityPack.HtmlDocument doc = hw.Load(@"https://barcodes.olegon.ru/" + message);
+                var nodes = doc.DocumentNode.SelectNodes("//div[@id='names']");
+
+                string responseData = "tsp";
+
+                foreach (HtmlNode node in nodes)
                 {
-                    client = new TcpClient("10.30.64.164", 14900);
+                    responseData = node.InnerText;
+                }
 
-                    byte[] data = Encoding.ASCII.GetBytes(message);
+                responseData = responseData.Remove(0, 22);
 
-                    stream = client.GetStream();
+                if (responseData == "")
+                {
+                    responseData = "tsp";
+                }
 
-                    stream.Write(data, 0, data.Length);
+                if (responseData == "tsp")
+                {
+                    Namer f = new Namer();
+                    f.ShowDialog();
 
-                    data = new byte[256];
+                    responseData = f.newName;
+                }
 
-                    string responseData = string.Empty;
+                bool nameExist = false;
 
-                    int bytes = stream.Read(data, 0, data.Length);
-                    responseData = Encoding.UTF8.GetString(data, 0, bytes);
-
-                    if (responseData == "tsp")
+                if (responseData != null)
+                {
+                    if (mode == "INC")
                     {
-                        Namer f = new Namer();
-                        f.ShowDialog();
+                        lockedInc = true;
 
-                        responseData = f.newName;
-                    }
-
-                    bool nameExist = false;
-
-                    if (responseData != null)
-                    {
-                        if (mode == "INC")
+                        for (int a = 0; a < namesArray.GetLength(0); a++)
                         {
-                            lockedInc = true;
-
-                            for (int a = 0; a < namesArray.GetLength(0); a++)
+                            if (namesArray[a] == responseData)
                             {
-                                if (namesArray[a] == responseData)
-                                {
-                                    nameExist = true;
-                                    countArray[a]++;
-
-                                    dataGridView1.Invoke((MethodInvoker)delegate
-                                    {
-                                        dataGridView1.Rows.Clear();
-
-                                        for (int i = 0; i < namesArray.GetLength(0); i++)
-                                        {
-                                            dataGridView1.Rows.Add();
-                                            dataGridView1[0, i].Value = namesArray[i];
-                                        }
-
-                                        for (int i = 0; i < countArray.GetLength(0); i++)
-                                        {
-                                            dataGridView1[1, i].Value = countArray[i];
-                                        }
-
-                                        for (int i = 0; i < idArray.GetLength(0); i++)
-                                        {
-                                            dataGridView1[2, i].Value = idArray[i];
-                                        }
-                                    });
-                                }
-                            }
-
-                            if (nameExist == false)
-                            {
-                                Array.Resize(ref idArray, idArray.Length + 1);
-                                idArray[idArray.Length - 1] = Convert.ToInt64(message);
-
-                                Array.Resize(ref namesArray, namesArray.Length + 1);
-                                namesArray[namesArray.Length - 1] = responseData;
-
-                                Array.Resize(ref countArray, countArray.Length + 1);
-                                countArray[countArray.Length - 1] = 1;
+                                nameExist = true;
+                                countArray[a]++;
 
                                 dataGridView1.Invoke((MethodInvoker)delegate
                                 {
@@ -358,63 +303,84 @@ namespace roadTrack
                                 });
                             }
                         }
-                        else if (mode == "DEC")
-                        {
-                            lockedDec = true;
 
-                            for (int a = 0; a < namesArray.GetLength(0); a++)
+                        if (nameExist == false)
+                        {
+                            Array.Resize(ref idArray, idArray.Length + 1);
+                            idArray[idArray.Length - 1] = Convert.ToInt64(message);
+
+                            Array.Resize(ref namesArray, namesArray.Length + 1);
+                            namesArray[namesArray.Length - 1] = responseData;
+
+                            Array.Resize(ref countArray, countArray.Length + 1);
+                            countArray[countArray.Length - 1] = 1;
+
+                            dataGridView1.Invoke((MethodInvoker)delegate
                             {
-                                if (namesArray[a] == responseData)
+                                dataGridView1.Rows.Clear();
+
+                                for (int i = 0; i < namesArray.GetLength(0); i++)
                                 {
-                                    nameExist = true;
-                                    if (countArray[a] > 0)
+                                    dataGridView1.Rows.Add();
+                                    dataGridView1[0, i].Value = namesArray[i];
+                                }
+
+                                for (int i = 0; i < countArray.GetLength(0); i++)
+                                {
+                                    dataGridView1[1, i].Value = countArray[i];
+                                }
+
+                                for (int i = 0; i < idArray.GetLength(0); i++)
+                                {
+                                    dataGridView1[2, i].Value = idArray[i];
+                                }
+                            });
+                        }
+                    }
+                    else if (mode == "DEC")
+                    {
+                        lockedDec = true;
+
+                        for (int a = 0; a < namesArray.GetLength(0); a++)
+                        {
+                            if (namesArray[a] == responseData)
+                            {
+                                nameExist = true;
+                                if (countArray[a] > 0)
+                                {
+                                    countArray[a]--;
+                                }
+
+                                dataGridView1.Invoke((MethodInvoker)delegate
+                                {
+                                    dataGridView1.Rows.Clear();
+
+                                    for (int i = 0; i < namesArray.GetLength(0); i++)
                                     {
-                                        countArray[a]--;
+                                        if (countArray[i] > 0)
+                                        {
+                                            dataGridView1.Rows.Add();
+                                            dataGridView1[0, i].Value = namesArray[i];
+                                        }
+
                                     }
 
-                                    dataGridView1.Invoke((MethodInvoker)delegate
+                                    for (int i = 0; i < countArray.GetLength(0); i++)
                                     {
-                                        dataGridView1.Rows.Clear();
-
-                                        for (int i = 0; i < namesArray.GetLength(0); i++)
+                                        if (countArray[i] > 0)
                                         {
-                                            if (countArray[i] > 0)
-                                            {
-                                                dataGridView1.Rows.Add();
-                                                dataGridView1[0, i].Value = namesArray[i];
-                                            }
-
+                                            dataGridView1[1, i].Value = countArray[i];
                                         }
+                                    }
 
-                                        for (int i = 0; i < countArray.GetLength(0); i++)
-                                        {
-                                            if (countArray[i] > 0)
-                                            {
-                                                dataGridView1[1, i].Value = countArray[i];
-                                            }
-                                        }
-
-                                        for (int i = 0; i < idArray.GetLength(0); i++)
-                                        {
-                                            dataGridView1[2, i].Value = idArray[i];
-                                        }
-                                    });
-                                }
+                                    for (int i = 0; i < idArray.GetLength(0); i++)
+                                    {
+                                        dataGridView1[2, i].Value = idArray[i];
+                                    }
+                                });
                             }
                         }
                     }
-                }
-                catch (ArgumentNullException e)
-                {
-                    Console.WriteLine("ArgumentNullException: {0}", e);
-                }
-                catch (SocketException e)
-                {
-                    Console.WriteLine("SocketException: {0}", e);
-                }
-                catch (System.IO.IOException)
-                {
-
                 }
             }
 
