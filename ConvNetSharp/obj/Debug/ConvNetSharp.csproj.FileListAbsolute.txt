@@ -1,6 +1,0 @@
-C:\Users\Daemon\Documents\Visual Studio 2015\Projects\SCHUNK-ANN-Recognizer-master\ConvNetSharp\bin\Debug\ConvNetSharp.dll.config
-C:\Users\Daemon\Documents\Visual Studio 2015\Projects\SCHUNK-ANN-Recognizer-master\ConvNetSharp\bin\Debug\ConvNetSharp.dll
-C:\Users\Daemon\Documents\Visual Studio 2015\Projects\SCHUNK-ANN-Recognizer-master\ConvNetSharp\bin\Debug\ConvNetSharp.pdb
-C:\Users\Daemon\Documents\Visual Studio 2015\Projects\SCHUNK-ANN-Recognizer-master\ConvNetSharp\obj\Debug\ConvNetSharp.csprojResolveAssemblyReference.cache
-C:\Users\Daemon\Documents\Visual Studio 2015\Projects\SCHUNK-ANN-Recognizer-master\ConvNetSharp\obj\Debug\ConvNetSharp.dll
-C:\Users\Daemon\Documents\Visual Studio 2015\Projects\SCHUNK-ANN-Recognizer-master\ConvNetSharp\obj\Debug\ConvNetSharp.pdb

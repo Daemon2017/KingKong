@@ -2,13 +2,12 @@
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Text;
 
 using AForge.Video.DirectShow;
 
 using MessagingToolkit.Barcode;
 using HtmlAgilityPack;
+using System.Net.Sockets;
 
 namespace roadTrack
 {
@@ -204,34 +203,76 @@ namespace roadTrack
         {
             bool idExist = false;
 
-            for (int w = 0; w < idArray.Length; w++)
+            if (mode == "INC")
             {
-                if (Convert.ToInt64(message) == idArray[w])
+                #region
+                for (int w = 0; w < idArray.Length; w++)
                 {
-                    idExist = true;
-                    countArray[w]++;
-
-                    dataGridView1.Invoke((MethodInvoker)delegate
+                    if (Convert.ToInt64(message) == idArray[w])
                     {
-                        dataGridView1.Rows.Clear();
+                        idExist = true;
+                        countArray[w]++;
 
-                        for (int i = 0; i < namesArray.GetLength(0); i++)
+                        dataGridView1.Invoke((MethodInvoker)delegate
                         {
-                            dataGridView1.Rows.Add();
-                            dataGridView1[0, i].Value = namesArray[i];
-                        }
+                            dataGridView1.Rows.Clear();
 
-                        for (int i = 0; i < countArray.GetLength(0); i++)
-                        {
-                            dataGridView1[1, i].Value = countArray[i];
-                        }
+                            for (int i = 0; i < namesArray.GetLength(0); i++)
+                            {
+                                dataGridView1.Rows.Add();
+                                dataGridView1[0, i].Value = namesArray[i];
+                            }
 
-                        for (int i = 0; i < idArray.GetLength(0); i++)
-                        {
-                            dataGridView1[2, i].Value = idArray[i];
-                        }
-                    });
+                            for (int i = 0; i < countArray.GetLength(0); i++)
+                            {
+                                dataGridView1[1, i].Value = countArray[i];
+                            }
+
+                            for (int i = 0; i < idArray.GetLength(0); i++)
+                            {
+                                dataGridView1[2, i].Value = idArray[i];
+                            }
+                        });
+                    }
                 }
+                #endregion
+            }
+            else if (mode == "DEC")
+            {
+                #region
+                for (int w = 0; w < idArray.Length; w++)
+                {
+                    if (Convert.ToInt64(message) == idArray[w])
+                    {
+                        idExist = true;
+                        if (countArray[w] > 0)
+                        {
+                            countArray[w]--;
+                        }
+
+                        dataGridView1.Invoke((MethodInvoker)delegate
+                        {
+                            dataGridView1.Rows.Clear();
+
+                            for (int i = 0; i < namesArray.GetLength(0); i++)
+                            {
+                                dataGridView1.Rows.Add();
+                                dataGridView1[0, i].Value = namesArray[i];
+                            }
+
+                            for (int i = 0; i < countArray.GetLength(0); i++)
+                            {
+                                dataGridView1[1, i].Value = countArray[i];
+                            }
+
+                            for (int i = 0; i < idArray.GetLength(0); i++)
+                            {
+                                dataGridView1[2, i].Value = idArray[i];
+                            }
+                        });
+                    }
+                }
+                #endregion
             }
 
             if (idExist == true)
@@ -244,7 +285,7 @@ namespace roadTrack
                 HtmlAgilityPack.HtmlDocument doc = hw.Load(@"https://barcodes.olegon.ru/" + message);
                 var nodes = doc.DocumentNode.SelectNodes("//div[@id='names']");
 
-                string responseData = "tsp";
+                string responseData = "";
 
                 foreach (HtmlNode node in nodes)
                 {
@@ -256,14 +297,14 @@ namespace roadTrack
                 if (responseData == "")
                 {
                     responseData = "tsp";
-                }
 
-                if (responseData == "tsp")
-                {
-                    Namer f = new Namer();
-                    f.ShowDialog();
+                    if (responseData == "tsp")
+                    {
+                        Namer f = new Namer();
+                        f.ShowDialog();
 
-                    responseData = f.newName;
+                        responseData = f.newName;
+                    }
                 }
 
                 bool nameExist = false;
@@ -272,6 +313,7 @@ namespace roadTrack
                 {
                     if (mode == "INC")
                     {
+                        #region
                         lockedInc = true;
 
                         for (int a = 0; a < namesArray.GetLength(0); a++)
@@ -336,9 +378,11 @@ namespace roadTrack
                                 }
                             });
                         }
+                        #endregion
                     }
                     else if (mode == "DEC")
                     {
+                        #region
                         lockedDec = true;
 
                         for (int a = 0; a < namesArray.GetLength(0); a++)
@@ -357,20 +401,13 @@ namespace roadTrack
 
                                     for (int i = 0; i < namesArray.GetLength(0); i++)
                                     {
-                                        if (countArray[i] > 0)
-                                        {
-                                            dataGridView1.Rows.Add();
-                                            dataGridView1[0, i].Value = namesArray[i];
-                                        }
-
+                                        dataGridView1.Rows.Add();
+                                        dataGridView1[0, i].Value = namesArray[i];
                                     }
 
                                     for (int i = 0; i < countArray.GetLength(0); i++)
                                     {
-                                        if (countArray[i] > 0)
-                                        {
-                                            dataGridView1[1, i].Value = countArray[i];
-                                        }
+                                        dataGridView1[1, i].Value = countArray[i];
                                     }
 
                                     for (int i = 0; i < idArray.GetLength(0); i++)
@@ -380,6 +417,7 @@ namespace roadTrack
                                 });
                             }
                         }
+                        #endregion
                     }
                 }
             }
@@ -444,6 +482,39 @@ namespace roadTrack
                 fps /= statReadyDec;
 
                 label2.Text = "FPS: " + fps.ToString();
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            net = null;
+
+            PrepareData();
+            CreateNetworkForTactile();
+            TrainNetworkForTactile(0.01);
+
+            //testingToolStripMenuItem.Enabled = true;
+            //saveToolStripMenuItem.Enabled = true;
+
+            MessageBox.Show("Обучение завершено!",
+                            "Готово",
+                            MessageBoxButtons.OK);
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            //ResultSchunkPicBox.Image = null;
+            //ResultsSchunkTxtBox.Text = null;
+
+            try
+            {
+                //ReceiveTCP("sensor", "127.0.0.1", 4446);
+
+                TestNetworkForTactile();
+            }
+            catch (SocketException)
+            {
+                //ResultsSchunkTxtBox.Text = "Ошибка приёма данных!";
             }
         }
     }

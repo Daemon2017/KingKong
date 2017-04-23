@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KingKong", "roadTrack\KingK
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConvNetSharp", "ConvNetSharp\ConvNetSharp.csproj", "{D36C5763-06A5-4D08-8B18-A77EA6CE841D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdFoot", "ThirdFoot\ThirdFoot.csproj", "{6DD3FFD1-0620-4426-B158-321E1F530093}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +26,10 @@ Global
 		{D36C5763-06A5-4D08-8B18-A77EA6CE841D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D36C5763-06A5-4D08-8B18-A77EA6CE841D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D36C5763-06A5-4D08-8B18-A77EA6CE841D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DD3FFD1-0620-4426-B158-321E1F530093}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DD3FFD1-0620-4426-B158-321E1F530093}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DD3FFD1-0620-4426-B158-321E1F530093}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DD3FFD1-0620-4426-B158-321E1F530093}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
