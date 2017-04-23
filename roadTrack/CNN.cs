@@ -1,35 +1,17 @@
-﻿using ConvNetSharp;
-using ConvNetSharp.Training;
-using ConvNetSharp.Layers;
-
-using System;
+﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using ConvNetSharp;
+using ConvNetSharp.Layers;
+using ConvNetSharp.Training;
+using ConvNetSharp.Serialization;
+using System.Drawing;
 
 namespace roadTrack
 {
     public partial class Form1
     {
-        private int trainingBatchSize;
-
-        double[] sensorSample = new double[76800];
-
-        private Net net;
-        private AdadeltaTrainer trainer;
-
-        private List<Entry> training;
-        private List<Entry> testing;
-
-        string[] names;
-
-        // Ширина изображения
-        int inputWidth = 320;
-        // Высота изображения
-        int inputHeight = 240;
-        // Число каналов у изображения
-        int inputDepth = 1;
-
         string[] namesTactile;
 
         double[] listObjectWeightForTactile;
@@ -58,7 +40,6 @@ namespace roadTrack
                                inputHeight,
                                inputDepth,
                                0.0);
-
             for (var i = 0; i < inputWidth; i++)
             {
                 for (var j = 0; j < inputHeight; j++)
@@ -114,12 +95,17 @@ namespace roadTrack
                     var xw = wLossWindow.Items.Average();
                     loss = xa + xw;
 
-                    //toolStripStatusLabel1.Text = string.Format("Потери: {0}", loss);
-                    //statusStrip1.Refresh();
+                    toolStripStatusLabel1.Text = string.Format("Потери: {0}", loss);
+                    statusStrip1.Refresh();
+
+                    var json = net.ToJSON();
+                    File.WriteAllText(@"NetworkStructure.json", json);
                 }
             }
 
             stepCount++;
+            toolStripStatusLabel2.Text = string.Format("Шаги: {0}", stepCount);
+            statusStrip1.Refresh();
         }
 
         private Item PrepareTestSample()
@@ -239,6 +225,8 @@ namespace roadTrack
 
         private void CreateNetworkForTactile()
         {
+            net = null;
+
             // Создаем сеть
             net = new Net();
 
@@ -253,11 +241,65 @@ namespace roadTrack
                 Pad = 1
             });
             net.AddLayer(new ReluLayer());
-
             // Ширина и высота окна уплотнения
             net.AddLayer(new PoolLayer(2, 2)
             {
                 // Сдвиг
+                Stride = 2
+            });
+
+            net.AddLayer(new ConvLayer(3, 3, 16)
+            {
+                Stride = 1,
+                Pad = 1
+            });
+            net.AddLayer(new ReluLayer());
+            net.AddLayer(new PoolLayer(2, 2)
+            {
+                Stride = 2
+            });
+
+            net.AddLayer(new ConvLayer(3, 3, 32)
+            {
+                Stride = 1,
+                Pad = 1
+            });
+            net.AddLayer(new ReluLayer());
+            net.AddLayer(new PoolLayer(2, 2)
+            {
+                Stride = 2
+            });
+
+            net.AddLayer(new ConvLayer(3, 3, 64)
+            {
+                Stride = 1,
+                Pad = 1
+            });
+            net.AddLayer(new ReluLayer());
+            net.AddLayer(new PoolLayer(2, 2)
+            {
+                Stride = 2
+            });
+
+            net.AddLayer(new ConvLayer(3, 3, 128)
+            {
+                Stride = 1,
+                Pad = 1
+            });
+            net.AddLayer(new ReluLayer());
+            net.AddLayer(new PoolLayer(2, 2)
+            {
+                Stride = 2
+            });
+
+            net.AddLayer(new ConvLayer(3, 3, 256)
+            {
+                Stride = 1,
+                Pad = 1
+            });
+            net.AddLayer(new ReluLayer());
+            net.AddLayer(new PoolLayer(2, 2)
+            {
                 Stride = 2
             });
 
@@ -272,7 +314,7 @@ namespace roadTrack
                 // Количество обрабатываемых образцов за заход
                 BatchSize = 10,
                 // Регуляризация - штраф на наибольший вес
-                L2Decay = 0.001,
+                L2Decay = 0.1,
             };
 
             do
@@ -284,11 +326,25 @@ namespace roadTrack
 
         private void TestNetworkForTactile()
         {
+            Bitmap bmp = myImage;
+
+            int a = 0;
+
+            for (int x = 0; x < bmp.Width; ++x)
+            {
+                for (int y = 0; y < bmp.Height; ++y)
+                {
+                    Color curr = bmp.GetPixel(x, y);
+                    sensorSample[a] = curr.GetBrightness();
+                    a++;
+                }
+            }
+
             testing = Get(sensorSample);
             var testSample = PrepareTestSample();
             int currentPrediction = TestStep(testSample);
-
-            //ResultsSchunkTxtBox.Text = names[currentPrediction];
+            
+            label3.Text = "Имя: " + names[currentPrediction].ToString();
 
             switch (currentPrediction)
             {

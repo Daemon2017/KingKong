@@ -2,12 +2,17 @@
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using System.Net.Sockets;
 
 using AForge.Video.DirectShow;
 
 using MessagingToolkit.Barcode;
 using HtmlAgilityPack;
-using System.Net.Sockets;
+
+using ConvNetSharp;
+using ConvNetSharp.Training;
+using System.IO;
+using ConvNetSharp.Serialization;
 
 namespace roadTrack
 {
@@ -17,6 +22,25 @@ namespace roadTrack
         {
             InitializeComponent();
         }
+
+        double[] sensorSample = new double[320*240];
+
+        private int trainingBatchSize;
+
+        private Net net;
+        private AdadeltaTrainer trainer;
+
+        private List<Entry> training;
+        private List<Entry> testing;
+
+        string[] names;
+
+        // Ширина изображения
+        int inputWidth = 240;
+        // Высота изображения
+        int inputHeight = 320;
+        // Число каналов у изображения
+        int inputDepth = 1;
 
         bool lockedInc = false;
         bool lockedDec = false;
@@ -33,6 +57,9 @@ namespace roadTrack
 
         int framesNumInc = 0;
         int framesNumDec = 0;
+
+        Bitmap workImage,
+               myImage;
 
         private const int statLength = 15;
 
@@ -80,7 +107,12 @@ namespace roadTrack
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            PrepareData();
 
+            net = null;
+            var json_temp = File.ReadAllLines("NetworkStructure.json");
+            string json = string.Join("", json_temp);
+            net = SerializationExtensions.FromJSON(json);
         }
 
         private void Form1_FormClosed(object sender,
@@ -100,6 +132,7 @@ namespace roadTrack
             {
                 //Загружаем
                 Bitmap workImage = (Bitmap)inputImage.Clone();
+                myImage = workImage;
 
                 DecodeBarcodeInc(workImage);
             }
@@ -113,7 +146,7 @@ namespace roadTrack
             if (framesNumDec > 1)
             {
                 //Загружаем
-                Bitmap workImage = (Bitmap)inputImage.Clone();
+                workImage = (Bitmap)inputImage.Clone();
 
                 DecodeBarcodeDec(workImage);
             }
@@ -147,7 +180,7 @@ namespace roadTrack
             {
                 if (lockedInc == true)
                 {
-                    if (lockedIncCounter < 30)
+                    if (lockedIncCounter < 60)
                     {
                         lockedIncCounter++;
                     }
@@ -186,7 +219,7 @@ namespace roadTrack
             {
                 if (lockedDec == true)
                 {
-                    if (lockedDecCounter < 30)
+                    if (lockedDecCounter < 60)
                     {
                         lockedDecCounter++;
                     }
@@ -489,7 +522,6 @@ namespace roadTrack
         {
             net = null;
 
-            PrepareData();
             CreateNetworkForTactile();
             TrainNetworkForTactile(0.01);
 
