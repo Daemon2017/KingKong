@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using System.Net.Sockets;
 
 using AForge.Video.DirectShow;
 
 using MessagingToolkit.Barcode;
+
 using HtmlAgilityPack;
 
-using ConvNetSharp;
-using ConvNetSharp.Training;
-using System.IO;
 using ConvNetSharp.Serialization;
 
 namespace roadTrack
@@ -22,25 +20,6 @@ namespace roadTrack
         {
             InitializeComponent();
         }
-
-        double[] sensorSample = new double[320*240];
-
-        private int trainingBatchSize;
-
-        private Net net;
-        private AdadeltaTrainer trainer;
-
-        private List<Entry> training;
-        private List<Entry> testing;
-
-        string[] names;
-
-        // Ширина изображения
-        int inputWidth = 240;
-        // Высота изображения
-        int inputHeight = 320;
-        // Число каналов у изображения
-        int inputDepth = 1;
 
         bool lockedInc = false;
         bool lockedDec = false;
@@ -107,12 +86,30 @@ namespace roadTrack
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            PrepareData();
+            try
+            {
+                PrepareData();
+            }
+            catch (FileNotFoundException)
+            {
+                MessageBox.Show("Не найдены некоторый .cfg файлы: обучение невозможно!",
+                                "Отсутствует файл",
+                                MessageBoxButtons.OK);
+            }
 
             net = null;
-            var json_temp = File.ReadAllLines("NetworkStructure.json");
-            string json = string.Join("", json_temp);
-            net = SerializationExtensions.FromJSON(json);
+            try
+            {
+                var json_temp = File.ReadAllLines("NetworkStructure.json");
+                string json = string.Join("", json_temp);
+                net = SerializationExtensions.FromJSON(json);
+            }
+            catch (FileNotFoundException)
+            {
+                MessageBox.Show("Не найден файл с обученной нейросетью. Необходимо обучение!",
+                                "Отсутствует файл",
+                                MessageBoxButtons.OK);
+            }
         }
 
         private void Form1_FormClosed(object sender,
@@ -133,7 +130,7 @@ namespace roadTrack
                 //Загружаем
                 Bitmap workImage = (Bitmap)inputImage.Clone();
                 myImage = workImage;
-
+                
                 DecodeBarcodeInc(workImage);
             }
 
@@ -525,9 +522,6 @@ namespace roadTrack
             CreateNetworkForTactile();
             TrainNetworkForTactile(0.01);
 
-            //testingToolStripMenuItem.Enabled = true;
-            //saveToolStripMenuItem.Enabled = true;
-
             MessageBox.Show("Обучение завершено!",
                             "Готово",
                             MessageBoxButtons.OK);
@@ -535,19 +529,7 @@ namespace roadTrack
 
         private void button4_Click(object sender, EventArgs e)
         {
-            //ResultSchunkPicBox.Image = null;
-            //ResultsSchunkTxtBox.Text = null;
-
-            try
-            {
-                //ReceiveTCP("sensor", "127.0.0.1", 4446);
-
-                TestNetworkForTactile();
-            }
-            catch (SocketException)
-            {
-                //ResultsSchunkTxtBox.Text = "Ошибка приёма данных!";
-            }
+            TestNetworkForTactile();
         }
     }
 }

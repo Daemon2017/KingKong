@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AForge.Imaging.Filters;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -12,7 +13,7 @@ namespace ThirdFoot
             InitializeComponent();
         }
 
-        float[,] data = new float[20, 76800];
+        float[,] data = new float[50, 307200];
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -21,6 +22,14 @@ namespace ThirdFoot
             for (int n = 0; n < data.GetLength(0); n++)
             {
                 bmp = new Bitmap(n + ".jpg");
+
+                pictureBox1.Image = bmp;
+                pictureBox1.Refresh();
+
+                bmp.RotateFlip(RotateFlipType.Rotate90FlipX);
+
+                pictureBox1.Image = bmp;
+                pictureBox1.Refresh();
 
                 int a = 0;
 

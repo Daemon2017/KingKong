@@ -2,19 +2,35 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
+using System.Drawing;
+
 using ConvNetSharp;
 using ConvNetSharp.Layers;
 using ConvNetSharp.Training;
 using ConvNetSharp.Serialization;
-using System.Drawing;
 
 namespace roadTrack
 {
     public partial class Form1
     {
-        string[] namesTactile;
+        private int trainingBatchSize;
 
-        double[] listObjectWeightForTactile;
+        private Net net;
+        private AdadeltaTrainer trainer;
+
+        private List<Entry> training;
+        private List<Entry> testing;
+
+        string[] names;
+
+        double[] sensorSample = new double[307200];
+
+        // Ширина изображения
+        int inputWidth = 480;
+        // Высота изображения
+        int inputHeight = 640;
+        // Число каналов у изображения
+        int inputDepth = 1;
 
         // Храним последние оценки качества - на обучающей и пробной выборке
         private readonly CircularBuffer<double> trainAccWindow = new CircularBuffer<double>(100);
@@ -189,9 +205,9 @@ namespace roadTrack
 
         static double[][] LoadData(string fileName)
         {
-            string[] genLines = File.ReadAllLines(fileName);
-
             double[][] temp = null;
+
+            string[] genLines = File.ReadAllLines(fileName);
 
             Array.Resize(ref temp, genLines.Length);
 
@@ -207,7 +223,7 @@ namespace roadTrack
                     if (double.TryParse(genTemp[j], out temp[i][j])) { }
                 }
             }
-
+            
             return temp;
         }
 
@@ -292,17 +308,6 @@ namespace roadTrack
                 Stride = 2
             });
 
-            net.AddLayer(new ConvLayer(3, 3, 256)
-            {
-                Stride = 1,
-                Pad = 1
-            });
-            net.AddLayer(new ReluLayer());
-            net.AddLayer(new PoolLayer(2, 2)
-            {
-                Stride = 2
-            });
-
             net.AddLayer(new FullyConnLayer(names.Length));
             net.AddLayer(new SoftmaxLayer(names.Length));
         }
@@ -312,9 +317,9 @@ namespace roadTrack
             trainer = new AdadeltaTrainer(net)
             {
                 // Количество обрабатываемых образцов за заход
-                BatchSize = 10,
+                BatchSize = 20,
                 // Регуляризация - штраф на наибольший вес
-                L2Decay = 0.1,
+                L2Decay = 0.01,
             };
 
             do
@@ -327,6 +332,8 @@ namespace roadTrack
         private void TestNetworkForTactile()
         {
             Bitmap bmp = myImage;
+
+            bmp.RotateFlip(RotateFlipType.Rotate90FlipX);
 
             int a = 0;
 
@@ -343,7 +350,7 @@ namespace roadTrack
             testing = Get(sensorSample);
             var testSample = PrepareTestSample();
             int currentPrediction = TestStep(testSample);
-            
+
             label3.Text = "Имя: " + names[currentPrediction].ToString();
 
             switch (currentPrediction)
