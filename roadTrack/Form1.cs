@@ -31,29 +31,24 @@ namespace roadTrack
         int[] countArray = new int[0];
         long[] idArray = new long[0];
 
-        BarcodeDecoder barcodeDecoder = new BarcodeDecoder();
-
         int framesNumInc = 0;
         int framesNumDec = 0;
 
-        Bitmap workImage,
-               myImage;
+        Bitmap myImage;
 
+        // Для вычисления FPS
         private const int statLength = 15;
-
         private int statIndexInc = 0;
         private int statIndexDec = 0;
-
         private int statReadyInc = 0;
         private int statReadyDec = 0;
-
         private int[] statCountInc = new int[statLength];
         private int[] statCountDec = new int[statLength];
 
         private void button1_Click(object sender,
                                    EventArgs e)
         {
-            //Подключаем видео
+            // Подключаем видео
             FilterInfoCollection videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
 
             var form = new VideoCaptureDeviceForm();
@@ -69,7 +64,7 @@ namespace roadTrack
 
         private void button2_Click(object sender, EventArgs e)
         {
-            //Подключаем видео
+            // Подключаем видео
             FilterInfoCollection videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
 
             var form = new VideoCaptureDeviceForm();
@@ -126,8 +121,10 @@ namespace roadTrack
         {
             if (framesNumInc > 1)
             {
-                //Загружаем
+                // Загружаем
                 Bitmap workImage = (Bitmap)inputImage.Clone();
+
+                // Создаем копию для работы в СНС
                 myImage = workImage;
 
                 DecodeBarcode(workImage, "INC");
@@ -141,8 +138,8 @@ namespace roadTrack
         {
             if (framesNumDec > 1)
             {
-                //Загружаем
-                workImage = (Bitmap)inputImage.Clone();
+                // Загружаем
+                Bitmap workImage = (Bitmap)inputImage.Clone();
 
                 DecodeBarcode(workImage, "DEC");
             }
@@ -160,11 +157,12 @@ namespace roadTrack
             decodingOptions.Add(DecodeOptions.PureBarcode, "");
             decodingOptions.Add(DecodeOptions.AutoRotate, true);
 
-            Result decodedResult = barcodeDecoder.Decode(image, decodingOptions);
-
-            if (mode == "INC")
+            try
             {
-                try
+                BarcodeDecoder barcodeDecoder = new BarcodeDecoder();
+                Result decodedResult = barcodeDecoder.Decode(image, decodingOptions);
+
+                if (mode == "INC")
                 {
                     if (decodedResult != null)
                     {
@@ -174,7 +172,20 @@ namespace roadTrack
                         }
                     }
                 }
-                catch (NotFoundException)
+                else if (mode == "DEC")
+                {
+                    if (decodedResult != null)
+                    {
+                        if (lockedDec == false)
+                        {
+                            Connect(decodedResult.Text, mode);
+                        }
+                    }
+                }
+            }
+            catch (NotFoundException)
+            {
+                if (mode == "INC")
                 {
                     if (lockedInc == true)
                     {
@@ -189,20 +200,7 @@ namespace roadTrack
                         }
                     }
                 }
-            }
-            else if (mode == "DEC")
-            {
-                try
-                {
-                    if (decodedResult != null)
-                    {
-                        if (lockedDec == false)
-                        {
-                            Connect(decodedResult.Text, mode);
-                        }
-                    }
-                }
-                catch (NotFoundException)
+                else if (mode == "DEC")
                 {
                     if (lockedDec == true)
                     {
@@ -255,6 +253,7 @@ namespace roadTrack
                     if (Convert.ToInt64(message) == idArray[w])
                     {
                         idExist = true;
+
                         countArray[w]++;
 
                         RefreshDataGrid();
