@@ -229,13 +229,36 @@ namespace roadTrack
             }
         }
 
+        void RefreshDataGrid()
+        {
+            dataGridView1.Invoke((MethodInvoker)delegate
+            {
+                dataGridView1.Rows.Clear();
+
+                for (int i = 0; i < namesArray.GetLength(0); i++)
+                {
+                    dataGridView1.Rows.Add();
+                    dataGridView1[0, i].Value = namesArray[i];
+                }
+
+                for (int i = 0; i < countArray.GetLength(0); i++)
+                {
+                    dataGridView1[1, i].Value = countArray[i];
+                }
+
+                for (int i = 0; i < idArray.GetLength(0); i++)
+                {
+                    dataGridView1[2, i].Value = idArray[i];
+                }
+            });
+        }
+
         void Connect(string message, string mode)
         {
             bool idExist = false;
 
             if (mode == "INC")
             {
-                #region
                 for (int w = 0; w < idArray.Length; w++)
                 {
                     if (Convert.ToInt64(message) == idArray[w])
@@ -243,66 +266,26 @@ namespace roadTrack
                         idExist = true;
                         countArray[w]++;
 
-                        dataGridView1.Invoke((MethodInvoker)delegate
-                        {
-                            dataGridView1.Rows.Clear();
-
-                            for (int i = 0; i < namesArray.GetLength(0); i++)
-                            {
-                                dataGridView1.Rows.Add();
-                                dataGridView1[0, i].Value = namesArray[i];
-                            }
-
-                            for (int i = 0; i < countArray.GetLength(0); i++)
-                            {
-                                dataGridView1[1, i].Value = countArray[i];
-                            }
-
-                            for (int i = 0; i < idArray.GetLength(0); i++)
-                            {
-                                dataGridView1[2, i].Value = idArray[i];
-                            }
-                        });
+                        RefreshDataGrid();
                     }
                 }
-                #endregion
             }
             else if (mode == "DEC")
             {
-                #region
                 for (int w = 0; w < idArray.Length; w++)
                 {
                     if (Convert.ToInt64(message) == idArray[w])
                     {
                         idExist = true;
+
                         if (countArray[w] > 0)
                         {
                             countArray[w]--;
                         }
 
-                        dataGridView1.Invoke((MethodInvoker)delegate
-                        {
-                            dataGridView1.Rows.Clear();
-
-                            for (int i = 0; i < namesArray.GetLength(0); i++)
-                            {
-                                dataGridView1.Rows.Add();
-                                dataGridView1[0, i].Value = namesArray[i];
-                            }
-
-                            for (int i = 0; i < countArray.GetLength(0); i++)
-                            {
-                                dataGridView1[1, i].Value = countArray[i];
-                            }
-
-                            for (int i = 0; i < idArray.GetLength(0); i++)
-                            {
-                                dataGridView1[2, i].Value = idArray[i];
-                            }
-                        });
+                        RefreshDataGrid();
                     }
                 }
-                #endregion
             }
 
             if (idExist == true)
@@ -343,7 +326,6 @@ namespace roadTrack
                 {
                     if (mode == "INC")
                     {
-                        #region
                         lockedInc = true;
 
                         for (int a = 0; a < namesArray.GetLength(0); a++)
@@ -353,26 +335,7 @@ namespace roadTrack
                                 nameExist = true;
                                 countArray[a]++;
 
-                                dataGridView1.Invoke((MethodInvoker)delegate
-                                {
-                                    dataGridView1.Rows.Clear();
-
-                                    for (int i = 0; i < namesArray.GetLength(0); i++)
-                                    {
-                                        dataGridView1.Rows.Add();
-                                        dataGridView1[0, i].Value = namesArray[i];
-                                    }
-
-                                    for (int i = 0; i < countArray.GetLength(0); i++)
-                                    {
-                                        dataGridView1[1, i].Value = countArray[i];
-                                    }
-
-                                    for (int i = 0; i < idArray.GetLength(0); i++)
-                                    {
-                                        dataGridView1[2, i].Value = idArray[i];
-                                    }
-                                });
+                                RefreshDataGrid();
                             }
                         }
 
@@ -387,32 +350,11 @@ namespace roadTrack
                             Array.Resize(ref countArray, countArray.Length + 1);
                             countArray[countArray.Length - 1] = 1;
 
-                            dataGridView1.Invoke((MethodInvoker)delegate
-                            {
-                                dataGridView1.Rows.Clear();
-
-                                for (int i = 0; i < namesArray.GetLength(0); i++)
-                                {
-                                    dataGridView1.Rows.Add();
-                                    dataGridView1[0, i].Value = namesArray[i];
-                                }
-
-                                for (int i = 0; i < countArray.GetLength(0); i++)
-                                {
-                                    dataGridView1[1, i].Value = countArray[i];
-                                }
-
-                                for (int i = 0; i < idArray.GetLength(0); i++)
-                                {
-                                    dataGridView1[2, i].Value = idArray[i];
-                                }
-                            });
+                            RefreshDataGrid();
                         }
-                        #endregion
                     }
                     else if (mode == "DEC")
                     {
-                        #region
                         lockedDec = true;
 
                         for (int a = 0; a < namesArray.GetLength(0); a++)
@@ -425,29 +367,9 @@ namespace roadTrack
                                     countArray[a]--;
                                 }
 
-                                dataGridView1.Invoke((MethodInvoker)delegate
-                                {
-                                    dataGridView1.Rows.Clear();
-
-                                    for (int i = 0; i < namesArray.GetLength(0); i++)
-                                    {
-                                        dataGridView1.Rows.Add();
-                                        dataGridView1[0, i].Value = namesArray[i];
-                                    }
-
-                                    for (int i = 0; i < countArray.GetLength(0); i++)
-                                    {
-                                        dataGridView1[1, i].Value = countArray[i];
-                                    }
-
-                                    for (int i = 0; i < idArray.GetLength(0); i++)
-                                    {
-                                        dataGridView1[2, i].Value = idArray[i];
-                                    }
-                                });
+                                RefreshDataGrid();
                             }
                         }
-                        #endregion
                     }
                 }
             }
@@ -525,6 +447,12 @@ namespace roadTrack
             MessageBox.Show("Обучение завершено!",
                             "Готово",
                             MessageBoxButtons.OK);
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            videoSourcePlayer1.Stop();
+            timer1.Stop();
         }
 
         private void button4_Click(object sender, EventArgs e)
