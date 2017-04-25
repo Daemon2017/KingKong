@@ -21,33 +21,38 @@ namespace roadTrack
             InitializeComponent();
         }
 
-        bool lockedInc = false;
-        bool lockedDec = false;
+        bool locked = false;
 
-        int lockedIncCounter = 0;
-        int lockedDecCounter = 0;
+        int lockedCounter = 0;
 
         string[] namesArray = new string[0];
         int[] countArray = new int[0];
         long[] idArray = new long[0];
 
-        int framesNumInc = 0;
-        int framesNumDec = 0;
+        int framesNum = 0;
+
+        string workMode = "INC";
 
         Bitmap myImage;
 
         // Для вычисления FPS
         private const int statLength = 15;
-        private int statIndexInc = 0;
-        private int statIndexDec = 0;
-        private int statReadyInc = 0;
-        private int statReadyDec = 0;
-        private int[] statCountInc = new int[statLength];
-        private int[] statCountDec = new int[statLength];
+        private int statIndex = 0;
+        private int statReady = 0;
+        private int[] statCount = new int[statLength];
 
         private void button1_Click(object sender,
                                    EventArgs e)
         {
+            if (radioButton1.Checked == true)
+            {
+                workMode = "INC";
+            }
+            else if (radioButton2.Checked == true)
+            {
+                workMode = "DEC";
+            }
+
             // Подключаем видео
             FilterInfoCollection videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
 
@@ -60,22 +65,6 @@ namespace roadTrack
 
             videoSourcePlayer1.Start();
             timer1.Start();
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            // Подключаем видео
-            FilterInfoCollection videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
-
-            var form = new VideoCaptureDeviceForm();
-
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-                videoSourcePlayer2.VideoSource = form.VideoDevice;
-            }
-
-            videoSourcePlayer2.Start();
-            timer2.Start();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -111,15 +100,12 @@ namespace roadTrack
         {
             videoSourcePlayer1.Stop();
             timer1.Stop();
-
-            videoSourcePlayer2.Stop();
-            timer2.Stop();
         }
 
         private void videoSourcePlayer1_NewFrame(object sender,
                                                  ref Bitmap inputImage)
         {
-            if (framesNumInc > 1)
+            if (framesNum > 1)
             {
                 // Загружаем
                 Bitmap workImage = (Bitmap)inputImage.Clone();
@@ -127,27 +113,13 @@ namespace roadTrack
                 // Создаем копию для работы в СНС
                 myImage = workImage;
 
-                DecodeBarcode(workImage, "INC");
+                DecodeBarcode(workImage);
             }
 
-            framesNumInc++;
+            framesNum++;
         }
 
-        private void videoSourcePlayer2_NewFrame(object sender,
-                                                 ref Bitmap inputImage)
-        {
-            if (framesNumDec > 1)
-            {
-                // Загружаем
-                Bitmap workImage = (Bitmap)inputImage.Clone();
-
-                DecodeBarcode(workImage, "DEC");
-            }
-
-            framesNumDec++;
-        }
-
-        private void DecodeBarcode(Bitmap image, string mode)
+        private void DecodeBarcode(Bitmap image)
         {
             Dictionary<DecodeOptions, object> decodingOptions = new Dictionary<DecodeOptions, object>();
             List<BarcodeFormat> possibleFormats = new List<BarcodeFormat>(1);
@@ -162,57 +134,26 @@ namespace roadTrack
                 BarcodeDecoder barcodeDecoder = new BarcodeDecoder();
                 Result decodedResult = barcodeDecoder.Decode(image, decodingOptions);
 
-                if (mode == "INC")
+                if (decodedResult != null)
                 {
-                    if (decodedResult != null)
+                    if (locked == false)
                     {
-                        if (lockedInc == false)
-                        {
-                            Connect(decodedResult.Text, mode);
-                        }
-                    }
-                }
-                else if (mode == "DEC")
-                {
-                    if (decodedResult != null)
-                    {
-                        if (lockedDec == false)
-                        {
-                            Connect(decodedResult.Text, mode);
-                        }
+                        Connect(decodedResult.Text);
                     }
                 }
             }
             catch (NotFoundException)
             {
-                if (mode == "INC")
+                if (locked == true)
                 {
-                    if (lockedInc == true)
+                    if (lockedCounter < 60)
                     {
-                        if (lockedIncCounter < 60)
-                        {
-                            lockedIncCounter++;
-                        }
-                        else
-                        {
-                            lockedInc = false;
-                            lockedIncCounter = 0;
-                        }
+                        lockedCounter++;
                     }
-                }
-                else if (mode == "DEC")
-                {
-                    if (lockedDec == true)
+                    else
                     {
-                        if (lockedDecCounter < 60)
-                        {
-                            lockedDecCounter++;
-                        }
-                        else
-                        {
-                            lockedDec = false;
-                            lockedDecCounter = 0;
-                        }
+                        locked = false;
+                        lockedCounter = 0;
                     }
                 }
             }
@@ -242,45 +183,36 @@ namespace roadTrack
             });
         }
 
-        private void Connect(string message, string mode)
+        private void Connect(string message)
         {
             bool idExist = false;
 
-            if (mode == "INC")
+            for (int w = 0; w < idArray.Length; w++)
             {
-                for (int w = 0; w < idArray.Length; w++)
+                if (Convert.ToInt64(message) == idArray[w])
                 {
-                    if (Convert.ToInt64(message) == idArray[w])
-                    {
-                        idExist = true;
+                    idExist = true;
 
+                    if (workMode == "INC")
+                    {
                         countArray[w]++;
-
-                        RefreshDataGrid();
                     }
-                }
-            }
-            else if (mode == "DEC")
-            {
-                for (int w = 0; w < idArray.Length; w++)
-                {
-                    if (Convert.ToInt64(message) == idArray[w])
+                    else if (workMode == "DEC")
                     {
-                        idExist = true;
-
                         if (countArray[w] > 0)
                         {
                             countArray[w]--;
                         }
-
-                        RefreshDataGrid();
                     }
+
+                    RefreshDataGrid();
                 }
             }
 
+
             if (idExist == true)
             {
-                lockedInc = true;
+                locked = true;
             }
             else
             {
@@ -314,21 +246,32 @@ namespace roadTrack
 
                 if (responseData != null)
                 {
-                    if (mode == "INC")
+                    locked = true;
+
+                    for (int a = 0; a < namesArray.GetLength(0); a++)
                     {
-                        lockedInc = true;
-
-                        for (int a = 0; a < namesArray.GetLength(0); a++)
+                        if (namesArray[a] == responseData)
                         {
-                            if (namesArray[a] == responseData)
+                            nameExist = true;
+
+                            if (workMode == "INC")
                             {
-                                nameExist = true;
                                 countArray[a]++;
-
-                                RefreshDataGrid();
                             }
-                        }
+                            else if (workMode == "DEC")
+                            {
+                                if (countArray[a] > 0)
+                                {
+                                    countArray[a]--;
+                                }
+                            }
 
+                            RefreshDataGrid();
+                        }
+                    }
+
+                    if (workMode == "INC")
+                    {
                         if (nameExist == false)
                         {
                             Array.Resize(ref idArray, idArray.Length + 1);
@@ -343,24 +286,6 @@ namespace roadTrack
                             RefreshDataGrid();
                         }
                     }
-                    else if (mode == "DEC")
-                    {
-                        lockedDec = true;
-
-                        for (int a = 0; a < namesArray.GetLength(0); a++)
-                        {
-                            if (namesArray[a] == responseData)
-                            {
-                                nameExist = true;
-                                if (countArray[a] > 0)
-                                {
-                                    countArray[a]--;
-                                }
-
-                                RefreshDataGrid();
-                            }
-                        }
-                    }
                 }
             }
 
@@ -373,57 +298,28 @@ namespace roadTrack
         {
             if (videoSourcePlayer1.VideoSource != null)
             {
-                statCountInc[statIndexInc] = videoSourcePlayer1.VideoSource.FramesReceived;
+                statCount[statIndex] = videoSourcePlayer1.VideoSource.FramesReceived;
 
-                if (++statIndexInc >= statLength)
+                if (++statIndex >= statLength)
                 {
-                    statIndexInc = 0;
+                    statIndex = 0;
                 }
 
-                if (statReadyInc < statLength)
+                if (statReady < statLength)
                 {
-                    statReadyInc++;
+                    statReady++;
                 }
 
                 float fps = 0;
 
-                for (int i = 0; i < statReadyInc; i++)
+                for (int i = 0; i < statReady; i++)
                 {
-                    fps += statCountInc[i];
+                    fps += statCount[i];
                 }
 
-                fps /= statReadyInc;
+                fps /= statReady;
 
                 label1.Text = "FPS: " + fps.ToString();
-            }
-        }
-
-        private void timer2_Tick(object sender, EventArgs e)
-        {
-            if (videoSourcePlayer2.VideoSource != null)
-            {
-                statCountDec[statIndexDec] = videoSourcePlayer2.VideoSource.FramesReceived;
-
-                if (++statIndexDec >= statLength)
-                {
-                    statIndexDec = 0;
-                }
-
-                if (statReadyDec < statLength)
-                {
-                    statReadyDec++;
-                }
-
-                float fps = 0;
-
-                for (int i = 0; i < statReadyInc; i++)
-                {
-                    fps += statCountDec[i];
-                }
-
-                fps /= statReadyDec;
-
-                label2.Text = "FPS: " + fps.ToString();
             }
         }
 
@@ -443,12 +339,6 @@ namespace roadTrack
         {
             videoSourcePlayer1.Stop();
             timer1.Stop();
-        }
-
-        private void button6_Click(object sender, EventArgs e)
-        {
-            videoSourcePlayer2.Stop();
-            timer2.Stop();
         }
 
         private void button4_Click(object sender, EventArgs e)
