@@ -34,22 +34,23 @@
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.label1 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.button5 = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.button6 = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.button2 = new System.Windows.Forms.Button();
             this.videoSourcePlayer2 = new AForge.Controls.VideoSourcePlayer();
             this.timer2 = new System.Windows.Forms.Timer(this.components);
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.Namen = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Number = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Num = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.button3 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel2 = new System.Windows.Forms.ToolStripStatusLabel();
             this.label3 = new System.Windows.Forms.Label();
-            this.button5 = new System.Windows.Forms.Button();
+            this.Namen = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Number = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Num = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -85,7 +86,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(0, 272);
+            this.label1.Location = new System.Drawing.Point(3, 278);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(39, 13);
             this.label1.TabIndex = 9;
@@ -99,23 +100,44 @@
             this.panel1.Controls.Add(this.videoSourcePlayer1);
             this.panel1.Location = new System.Drawing.Point(12, 12);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(325, 290);
+            this.panel1.Size = new System.Drawing.Size(325, 300);
             this.panel1.TabIndex = 10;
+            // 
+            // button5
+            // 
+            this.button5.Location = new System.Drawing.Point(44, 272);
+            this.button5.Name = "button5";
+            this.button5.Size = new System.Drawing.Size(276, 25);
+            this.button5.TabIndex = 10;
+            this.button5.Text = "Стоп";
+            this.button5.UseVisualStyleBackColor = true;
+            this.button5.Click += new System.EventHandler(this.button5_Click);
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.button6);
             this.panel2.Controls.Add(this.label2);
             this.panel2.Controls.Add(this.button2);
             this.panel2.Controls.Add(this.videoSourcePlayer2);
             this.panel2.Location = new System.Drawing.Point(343, 12);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(325, 290);
+            this.panel2.Size = new System.Drawing.Size(325, 300);
             this.panel2.TabIndex = 11;
+            // 
+            // button6
+            // 
+            this.button6.Location = new System.Drawing.Point(46, 272);
+            this.button6.Name = "button6";
+            this.button6.Size = new System.Drawing.Size(276, 25);
+            this.button6.TabIndex = 11;
+            this.button6.Text = "Стоп";
+            this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(2, 272);
+            this.label2.Location = new System.Drawing.Point(3, 278);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(39, 13);
             this.label2.TabIndex = 9;
@@ -159,25 +181,9 @@
             this.dataGridView1.Size = new System.Drawing.Size(500, 364);
             this.dataGridView1.TabIndex = 12;
             // 
-            // Namen
-            // 
-            this.Namen.HeaderText = "Название";
-            this.Namen.Name = "Namen";
-            this.Namen.Width = 200;
-            // 
-            // Number
-            // 
-            this.Number.HeaderText = "Количество";
-            this.Number.Name = "Number";
-            // 
-            // Num
-            // 
-            this.Num.HeaderText = "Код";
-            this.Num.Name = "Num";
-            // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(12, 354);
+            this.button3.Location = new System.Drawing.Point(12, 387);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(75, 23);
             this.button3.TabIndex = 13;
@@ -187,7 +193,7 @@
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(15, 308);
+            this.button4.Location = new System.Drawing.Point(12, 338);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(320, 23);
             this.button4.TabIndex = 14;
@@ -200,7 +206,7 @@
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1,
             this.toolStripStatusLabel2});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 383);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 413);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(1184, 22);
             this.statusStrip1.TabIndex = 15;
@@ -221,27 +227,34 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(13, 338);
+            this.label3.Location = new System.Drawing.Point(12, 364);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(32, 13);
             this.label3.TabIndex = 16;
             this.label3.Text = "Имя:";
             // 
-            // button5
+            // Namen
             // 
-            this.button5.Location = new System.Drawing.Point(46, 272);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(276, 13);
-            this.button5.TabIndex = 10;
-            this.button5.Text = "Стоп";
-            this.button5.UseVisualStyleBackColor = true;
-            this.button5.Click += new System.EventHandler(this.button5_Click);
+            this.Namen.HeaderText = "Название";
+            this.Namen.Name = "Namen";
+            this.Namen.Width = 275;
+            // 
+            // Number
+            // 
+            this.Number.HeaderText = "Количество";
+            this.Number.Name = "Number";
+            this.Number.Width = 70;
+            // 
+            // Num
+            // 
+            this.Num.HeaderText = "Код";
+            this.Num.Name = "Num";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1184, 405);
+            this.ClientSize = new System.Drawing.Size(1184, 435);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.button4);
@@ -276,9 +289,6 @@
         private AForge.Controls.VideoSourcePlayer videoSourcePlayer2;
         private System.Windows.Forms.Timer timer2;
         private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Namen;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Number;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Num;
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.StatusStrip statusStrip1;
@@ -286,6 +296,10 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button button5;
+        private System.Windows.Forms.Button button6;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Namen;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Number;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Num;
     }
 }
 

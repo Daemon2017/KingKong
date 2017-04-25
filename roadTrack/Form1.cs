@@ -31,8 +31,7 @@ namespace roadTrack
         int[] countArray = new int[0];
         long[] idArray = new long[0];
 
-        BarcodeDecoder barcodeDecoderInc = new BarcodeDecoder();
-        BarcodeDecoder barcodeDecoderDec = new BarcodeDecoder();
+        BarcodeDecoder barcodeDecoder = new BarcodeDecoder();
 
         int framesNumInc = 0;
         int framesNumDec = 0;
@@ -130,8 +129,8 @@ namespace roadTrack
                 //Загружаем
                 Bitmap workImage = (Bitmap)inputImage.Clone();
                 myImage = workImage;
-                
-                DecodeBarcodeInc(workImage);
+
+                DecodeBarcode(workImage, "INC");
             }
 
             framesNumInc++;
@@ -145,13 +144,13 @@ namespace roadTrack
                 //Загружаем
                 workImage = (Bitmap)inputImage.Clone();
 
-                DecodeBarcodeDec(workImage);
+                DecodeBarcode(workImage, "DEC");
             }
 
             framesNumDec++;
         }
 
-        private void DecodeBarcodeInc(Bitmap image)
+        private void DecodeBarcode(Bitmap image, string mode)
         {
             Dictionary<DecodeOptions, object> decodingOptions = new Dictionary<DecodeOptions, object>();
             List<BarcodeFormat> possibleFormats = new List<BarcodeFormat>(1);
@@ -161,75 +160,67 @@ namespace roadTrack
             decodingOptions.Add(DecodeOptions.PureBarcode, "");
             decodingOptions.Add(DecodeOptions.AutoRotate, true);
 
-            try
-            {
-                Result decodedResult = barcodeDecoderInc.Decode(image, decodingOptions);
+            Result decodedResult = barcodeDecoder.Decode(image, decodingOptions);
 
-                if (decodedResult != null)
+            if (mode == "INC")
+            {
+                try
                 {
-                    if (lockedInc == false)
+                    if (decodedResult != null)
                     {
-                        Connect(decodedResult.Text, "INC");
+                        if (lockedInc == false)
+                        {
+                            Connect(decodedResult.Text, mode);
+                        }
+                    }
+                }
+                catch (NotFoundException)
+                {
+                    if (lockedInc == true)
+                    {
+                        if (lockedIncCounter < 60)
+                        {
+                            lockedIncCounter++;
+                        }
+                        else
+                        {
+                            lockedInc = false;
+                            lockedIncCounter = 0;
+                        }
                     }
                 }
             }
-            catch (NotFoundException)
+            else if (mode == "DEC")
             {
-                if (lockedInc == true)
+                try
                 {
-                    if (lockedIncCounter < 60)
+                    if (decodedResult != null)
                     {
-                        lockedIncCounter++;
-                    }
-                    else
-                    {
-                        lockedInc = false;
-                        lockedIncCounter = 0;
+                        if (lockedDec == false)
+                        {
+                            Connect(decodedResult.Text, mode);
+                        }
                     }
                 }
-            }
-        }
-
-        private void DecodeBarcodeDec(Bitmap image)
-        {
-            Dictionary<DecodeOptions, object> decodingOptions = new Dictionary<DecodeOptions, object>();
-            List<BarcodeFormat> possibleFormats = new List<BarcodeFormat>(1);
-
-            possibleFormats.Add(BarcodeFormat.EAN13);
-            decodingOptions.Add(DecodeOptions.PossibleFormats, possibleFormats);
-            decodingOptions.Add(DecodeOptions.PureBarcode, "");
-            decodingOptions.Add(DecodeOptions.AutoRotate, true);
-
-            try
-            {
-                Result decodedResult = barcodeDecoderDec.Decode(image, decodingOptions);
-
-                if (decodedResult != null)
+                catch (NotFoundException)
                 {
-                    if (lockedDec == false)
+                    if (lockedDec == true)
                     {
-                        Connect(decodedResult.Text, "DEC");
-                    }
-                }
-            }
-            catch (NotFoundException)
-            {
-                if (lockedDec == true)
-                {
-                    if (lockedDecCounter < 60)
-                    {
-                        lockedDecCounter++;
-                    }
-                    else
-                    {
-                        lockedDec = false;
-                        lockedDecCounter = 0;
+                        if (lockedDecCounter < 60)
+                        {
+                            lockedDecCounter++;
+                        }
+                        else
+                        {
+                            lockedDec = false;
+                            lockedDecCounter = 0;
+                        }
                     }
                 }
             }
         }
 
-        void RefreshDataGrid()
+        private void RefreshDataGrid()
         {
             dataGridView1.Invoke((MethodInvoker)delegate
             {
@@ -253,7 +244,7 @@ namespace roadTrack
             });
         }
 
-        void Connect(string message, string mode)
+        private void Connect(string message, string mode)
         {
             bool idExist = false;
 
@@ -453,6 +444,12 @@ namespace roadTrack
         {
             videoSourcePlayer1.Stop();
             timer1.Stop();
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            videoSourcePlayer2.Stop();
+            timer2.Stop();
         }
 
         private void button4_Click(object sender, EventArgs e)
