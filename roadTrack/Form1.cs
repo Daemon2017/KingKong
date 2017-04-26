@@ -187,6 +187,7 @@ namespace roadTrack
         {
             bool idExist = false;
 
+            // Проверяем нет ли вещи с таким штрихом-кодом в базе
             for (int w = 0; w < idArray.Length; w++)
             {
                 if (Convert.ToInt64(message) == idArray[w])
@@ -229,25 +230,22 @@ namespace roadTrack
 
                 responseData = responseData.Remove(0, 22);
 
+                bool nameExist = false;
+
+                // Если в базе сайта нет названия - даем предмету характерное название
                 if (responseData == "")
                 {
-                    responseData = "tsp";
+                    Namer f = new Namer();
+                    f.ShowDialog();
 
-                    if (responseData == "tsp")
-                    {
-                        Namer f = new Namer();
-                        f.ShowDialog();
-
-                        responseData = f.newName;
-                    }
+                    responseData = f.newName;
                 }
-
-                bool nameExist = false;
 
                 if (responseData != null)
                 {
                     locked = true;
 
+                    // Проверяем нет ли вещи с таким именем в базе
                     for (int a = 0; a < namesArray.GetLength(0); a++)
                     {
                         if (namesArray[a] == responseData)
