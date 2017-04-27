@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace roadTrack
+namespace MyLittleServer
 {
     public partial class Namer : Form
     {

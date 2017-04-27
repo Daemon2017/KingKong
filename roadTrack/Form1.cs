@@ -8,9 +8,8 @@ using AForge.Video.DirectShow;
 
 using MessagingToolkit.Barcode;
 
-using HtmlAgilityPack;
-
 using ConvNetSharp.Serialization;
+using System.Net.Sockets;
 
 namespace roadTrack
 {
@@ -20,20 +19,14 @@ namespace roadTrack
         {
             InitializeComponent();
         }
-
-        bool locked = false;
-
-        int lockedCounter = 0;
-
-        string[] namesArray = new string[0];
-        int[] countArray = new int[0];
-        long[] idArray = new long[0];
-
+        
         int framesNum = 0;
 
         string workMode = "INC";
 
         Bitmap myImage;
+
+        Result oldDecodedResult;
 
         // Для вычисления FPS
         private const int statLength = 15;
@@ -131,164 +124,48 @@ namespace roadTrack
 
             try
             {
-                BarcodeDecoder barcodeDecoder = new BarcodeDecoder();
-                Result decodedResult = barcodeDecoder.Decode(image, decodingOptions);
+                    BarcodeDecoder barcodeDecoder = new BarcodeDecoder();
+                    Result newDecodedResult = barcodeDecoder.Decode(image, decodingOptions);
 
-                if (decodedResult != null)
-                {
-                    if (locked == false)
+                    if (newDecodedResult != oldDecodedResult)
                     {
-                        Connect(decodedResult.Text);
+                        Connect(newDecodedResult.Text, workMode);
                     }
-                }
+
+                    oldDecodedResult = newDecodedResult;
             }
             catch (NotFoundException)
             {
-                if (locked == true)
-                {
-                    if (lockedCounter < 60)
-                    {
-                        lockedCounter++;
-                    }
-                    else
-                    {
-                        locked = false;
-                        lockedCounter = 0;
-                    }
-                }
+
             }
         }
 
-        private void RefreshDataGrid()
+        private void Connect(string barcode, string mode)
         {
-            dataGridView1.Invoke((MethodInvoker)delegate
+            try
             {
-                dataGridView1.Rows.Clear();
+                TcpClient client = new TcpClient("127.0.0.1", 13000);
 
-                for (int i = 0; i < namesArray.GetLength(0); i++)
-                {
-                    dataGridView1.Rows.Add();
-                    dataGridView1[0, i].Value = namesArray[i];
-                }
+                byte[] data = System.Text.Encoding.ASCII.GetBytes(barcode + "," + mode);
 
-                for (int i = 0; i < countArray.GetLength(0); i++)
-                {
-                    dataGridView1[1, i].Value = countArray[i];
-                }
+                NetworkStream stream = client.GetStream();
+                stream.Write(data, 0, data.Length);
 
-                for (int i = 0; i < idArray.GetLength(0); i++)
-                {
-                    dataGridView1[2, i].Value = idArray[i];
-                }
-            });
-        }
+                data = new byte[256];
 
-        private void Connect(string message)
-        {
-            bool idExist = false;
+                string responseData = string.Empty;
 
-            // Проверяем нет ли вещи с таким штрихом-кодом в базе
-            for (int w = 0; w < idArray.Length; w++)
-            {
-                if (Convert.ToInt64(message) == idArray[w])
-                {
-                    idExist = true;
-
-                    if (workMode == "INC")
-                    {
-                        countArray[w]++;
-                    }
-                    else if (workMode == "DEC")
-                    {
-                        if (countArray[w] > 0)
-                        {
-                            countArray[w]--;
-                        }
-                    }
-
-                    RefreshDataGrid();
-                }
+                stream.Close();
+                client.Close();
             }
-
-
-            if (idExist == true)
+            catch (ArgumentNullException)
             {
-                locked = true;
+
             }
-            else
+            catch (SocketException)
             {
-                HtmlWeb hw = new HtmlWeb();
-                HtmlAgilityPack.HtmlDocument doc = hw.Load(@"https://barcodes.olegon.ru/" + message);
-                var nodes = doc.DocumentNode.SelectNodes("//div[@id='names']");
 
-                string responseData = "";
-
-                foreach (HtmlNode node in nodes)
-                {
-                    responseData = node.InnerText;
-                }
-
-                responseData = responseData.Remove(0, 22);
-
-                bool nameExist = false;
-
-                // Если в базе сайта нет названия - даем предмету характерное название
-                if (responseData == "")
-                {
-                    Namer f = new Namer();
-                    f.ShowDialog();
-
-                    responseData = f.newName;
-                }
-
-                if (responseData != null)
-                {
-                    locked = true;
-
-                    // Проверяем нет ли вещи с таким именем в базе
-                    for (int a = 0; a < namesArray.GetLength(0); a++)
-                    {
-                        if (namesArray[a] == responseData)
-                        {
-                            nameExist = true;
-
-                            if (workMode == "INC")
-                            {
-                                countArray[a]++;
-                            }
-                            else if (workMode == "DEC")
-                            {
-                                if (countArray[a] > 0)
-                                {
-                                    countArray[a]--;
-                                }
-                            }
-
-                            RefreshDataGrid();
-                        }
-                    }
-
-                    if (workMode == "INC")
-                    {
-                        if (nameExist == false)
-                        {
-                            Array.Resize(ref idArray, idArray.Length + 1);
-                            idArray[idArray.Length - 1] = Convert.ToInt64(message);
-
-                            Array.Resize(ref namesArray, namesArray.Length + 1);
-                            namesArray[namesArray.Length - 1] = responseData;
-
-                            Array.Resize(ref countArray, countArray.Length + 1);
-                            countArray[countArray.Length - 1] = 1;
-
-                            RefreshDataGrid();
-                        }
-                    }
-                }
             }
-
-            Console.WriteLine("\n Press Enter to continue...");
-            Console.Read();
         }
 
         private void timer1_Tick(object sender,
