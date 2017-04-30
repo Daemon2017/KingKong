@@ -19,14 +19,15 @@ namespace roadTrack
         {
             InitializeComponent();
         }
-        
+
+        bool locked = false;
+        short lockedFrames = 0;
+
         int framesNum = 0;
 
         string workMode = "INC";
 
         Bitmap myImage;
-
-        Result oldDecodedResult;
 
         // Для вычисления FPS
         private const int statLength = 15;
@@ -49,11 +50,11 @@ namespace roadTrack
             // Подключаем видео
             FilterInfoCollection videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
 
-            var form = new VideoCaptureDeviceForm();
+            var videoStreamConfig = new VideoCaptureDeviceForm();
 
-            if (form.ShowDialog() == DialogResult.OK)
+            if (videoStreamConfig.ShowDialog() == DialogResult.OK)
             {
-                videoSourcePlayer1.VideoSource = form.VideoDevice;
+                videoSourcePlayer1.VideoSource = videoStreamConfig.VideoDevice;
             }
 
             videoSourcePlayer1.Start();
@@ -62,17 +63,6 @@ namespace roadTrack
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            try
-            {
-                PrepareData();
-            }
-            catch (FileNotFoundException)
-            {
-                MessageBox.Show("Не найдены некоторый .cfg файлы: обучение невозможно!",
-                                "Отсутствует файл",
-                                MessageBoxButtons.OK);
-            }
-
             net = null;
             try
             {
@@ -83,6 +73,17 @@ namespace roadTrack
             catch (FileNotFoundException)
             {
                 MessageBox.Show("Не найден файл с обученной нейросетью. Необходимо обучение!",
+                                "Отсутствует файл",
+                                MessageBoxButtons.OK);
+            }
+
+            try
+            {
+                PrepareData();
+            }
+            catch (FileNotFoundException)
+            {
+                MessageBox.Show("Не найдены некоторый .cfg файлы: обучение невозможно!",
                                 "Отсутствует файл",
                                 MessageBoxButtons.OK);
             }
@@ -100,14 +101,31 @@ namespace roadTrack
         {
             if (framesNum > 1)
             {
-                // Загружаем
-                Bitmap workImage = (Bitmap)inputImage.Clone();
-
                 // Создаем копию для работы в СНС
-                myImage = workImage;
+                myImage = inputImage;
 
-                DecodeBarcode(workImage);
+                if (locked == false)
+                {
+                    DecodeBarcode(inputImage);
+                }
+                else
+                {
+                    if (lockedFrames < 15)
+                    {
+                        lockedFrames++;
+                    }
+                    else
+                    {
+                        locked = false;
+                        lockedFrames = 0;
+                    }
+                }
             }
+
+            label2.Invoke((MethodInvoker)delegate
+            {
+                label2.Text = "Защелка: " + lockedFrames.ToString();
+            });
 
             framesNum++;
         }
@@ -124,15 +142,12 @@ namespace roadTrack
 
             try
             {
-                    BarcodeDecoder barcodeDecoder = new BarcodeDecoder();
-                    Result newDecodedResult = barcodeDecoder.Decode(image, decodingOptions);
+                BarcodeDecoder barcodeDecoder = new BarcodeDecoder();
+                Result newDecodedResult = barcodeDecoder.Decode(image, decodingOptions);
 
-                    if (newDecodedResult != oldDecodedResult)
-                    {
-                        Connect(newDecodedResult.Text, workMode);
-                    }
+                image = null;
 
-                    oldDecodedResult = newDecodedResult;
+                Connect(newDecodedResult.Text, workMode);
             }
             catch (NotFoundException)
             {
@@ -151,21 +166,17 @@ namespace roadTrack
                 NetworkStream stream = client.GetStream();
                 stream.Write(data, 0, data.Length);
 
-                data = new byte[256];
-
-                string responseData = string.Empty;
-
                 stream.Close();
                 client.Close();
             }
-            catch (ArgumentNullException)
-            {
-
-            }
             catch (SocketException)
             {
-
+                MessageBox.Show("Сервер не отвечает!",
+                                "Ошибка",
+                                MessageBoxButtons.OK);
             }
+
+            locked = true;
         }
 
         private void timer1_Tick(object sender,

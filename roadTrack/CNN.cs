@@ -223,7 +223,7 @@ namespace roadTrack
                     if (double.TryParse(genTemp[j], out temp[i][j])) { }
                 }
             }
-            
+
             return temp;
         }
 
