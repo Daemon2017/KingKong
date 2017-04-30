@@ -3,22 +3,19 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using System.Collections.Generic;
-
 using AForge.Video.DirectShow;
-
 using MessagingToolkit.Barcode;
-
 using ConvNetSharp.Serialization;
-using System.Net.Sockets;
+using S22.Xmpp.Client;
 
 namespace roadTrack
 {
     public partial class Form1 : Form
     {
-        public Form1()
-        {
-            InitializeComponent();
-        }
+        static string hostname = "jabber.ru";
+        static string username = "";
+        static string password = "";
+        XmppClient client = new XmppClient(hostname, username, password);
 
         bool locked = false;
         short lockedFrames = 0;
@@ -34,6 +31,11 @@ namespace roadTrack
         private int statIndex = 0;
         private int statReady = 0;
         private int[] statCount = new int[statLength];
+
+        public Form1()
+        {
+            InitializeComponent();
+        }
 
         private void button1_Click(object sender,
                                    EventArgs e)
@@ -87,11 +89,27 @@ namespace roadTrack
                                 "Отсутствует файл",
                                 MessageBoxButtons.OK);
             }
+
+            try
+            {
+                client.Connect();
+            }
+            catch
+            {
+                MessageBox.Show("Не удалось соединиться с сервером, проверьте логин/пароль!",
+                                "Ошибка",
+                                MessageBoxButtons.OK);
+            }
         }
 
         private void Form1_FormClosed(object sender,
                                       FormClosedEventArgs e)
         {
+            if (client != null)
+            {
+                client.Close();
+            }
+
             videoSourcePlayer1.Stop();
             timer1.Stop();
         }
@@ -148,6 +166,8 @@ namespace roadTrack
                 image = null;
 
                 Connect(newDecodedResult.Text, workMode);
+
+                locked = true;
             }
             catch (NotFoundException)
             {
@@ -157,26 +177,7 @@ namespace roadTrack
 
         private void Connect(string barcode, string mode)
         {
-            try
-            {
-                TcpClient client = new TcpClient("127.0.0.1", 13000);
-
-                byte[] data = System.Text.Encoding.ASCII.GetBytes(barcode + "," + mode);
-
-                NetworkStream stream = client.GetStream();
-                stream.Write(data, 0, data.Length);
-
-                stream.Close();
-                client.Close();
-            }
-            catch (SocketException)
-            {
-                MessageBox.Show("Сервер не отвечает!",
-                                "Ошибка",
-                                MessageBoxButtons.OK);
-            }
-
-            locked = true;
+            client.SendMessage(username + "@" + hostname, barcode + "," + mode);
         }
 
         private void timer1_Tick(object sender,
