@@ -3,17 +3,18 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Drawing;
-
 using ConvNetSharp;
 using ConvNetSharp.Layers;
 using ConvNetSharp.Training;
 using ConvNetSharp.Serialization;
 
-namespace roadTrack
+namespace MyLittleServer
 {
     public partial class Form1
     {
         private int trainingBatchSize;
+
+        Bitmap myImage;
 
         private Net net;
         private AdadeltaTrainer trainer;

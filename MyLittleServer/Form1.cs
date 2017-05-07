@@ -3,6 +3,8 @@ using System.Windows.Forms;
 using HtmlAgilityPack;
 using S22.Xmpp.Client;
 using S22.Xmpp.Im;
+using System.IO;
+using ConvNetSharp.Serialization;
 
 namespace MyLittleServer
 {
@@ -13,8 +15,8 @@ namespace MyLittleServer
         long[] idArray = new long[0];
 
         static string hostname = "jabber.ru";
-        static string username = "";
-        static string password = "";
+        static string username = "Daemon2017";
+        static string password = "Lamok007";
         XmppClient client = new XmppClient(hostname, username, password);
 
         string workMode;
@@ -174,6 +176,31 @@ namespace MyLittleServer
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            net = null;
+            try
+            {
+                var json_temp = File.ReadAllLines("NetworkStructure.json");
+                string json = string.Join("", json_temp);
+                net = SerializationExtensions.FromJSON(json);
+            }
+            catch (FileNotFoundException)
+            {
+                MessageBox.Show("Не найден файл с обученной нейросетью. Необходимо обучение!",
+                                "Отсутствует файл",
+                                MessageBoxButtons.OK);
+            }
+
+            try
+            {
+                PrepareData();
+            }
+            catch (FileNotFoundException)
+            {
+                MessageBox.Show("Не найдены некоторый .cfg файлы: обучение невозможно!",
+                                "Отсутствует файл",
+                                MessageBoxButtons.OK);
+            }
+
             try
             {
                 client.Connect();
@@ -184,6 +211,23 @@ namespace MyLittleServer
                                 "Ошибка",
                                 MessageBoxButtons.OK);
             }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            net = null;
+
+            CreateNetworkForTactile();
+            TrainNetworkForTactile(0.01);
+
+            MessageBox.Show("Обучение завершено!",
+                            "Готово",
+                            MessageBoxButtons.OK);
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            TestNetworkForTactile();
         }
     }
 }

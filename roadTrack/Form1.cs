@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using AForge.Video.DirectShow;
 using MessagingToolkit.Barcode;
-using ConvNetSharp.Serialization;
 using S22.Xmpp.Client;
 
 namespace roadTrack
@@ -13,8 +11,8 @@ namespace roadTrack
     public partial class Form1 : Form
     {
         static string hostname = "jabber.ru";
-        static string username = "";
-        static string password = "";
+        static string username = "Daemon2017";
+        static string password = "Lamok007";
         XmppClient client = new XmppClient(hostname, username, password);
 
         bool locked = false;
@@ -23,8 +21,6 @@ namespace roadTrack
         int framesNum = 0;
 
         string workMode = "INC";
-
-        Bitmap myImage;
 
         // Для вычисления FPS
         private const int statLength = 15;
@@ -65,31 +61,6 @@ namespace roadTrack
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            net = null;
-            try
-            {
-                var json_temp = File.ReadAllLines("NetworkStructure.json");
-                string json = string.Join("", json_temp);
-                net = SerializationExtensions.FromJSON(json);
-            }
-            catch (FileNotFoundException)
-            {
-                MessageBox.Show("Не найден файл с обученной нейросетью. Необходимо обучение!",
-                                "Отсутствует файл",
-                                MessageBoxButtons.OK);
-            }
-
-            try
-            {
-                PrepareData();
-            }
-            catch (FileNotFoundException)
-            {
-                MessageBox.Show("Не найдены некоторый .cfg файлы: обучение невозможно!",
-                                "Отсутствует файл",
-                                MessageBoxButtons.OK);
-            }
-
             try
             {
                 client.Connect();
@@ -119,9 +90,6 @@ namespace roadTrack
         {
             if (framesNum > 1)
             {
-                // Создаем копию для работы в СНС
-                myImage = inputImage;
-
                 if (locked == false)
                 {
                     DecodeBarcode(inputImage);
@@ -210,27 +178,10 @@ namespace roadTrack
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
-            net = null;
-
-            CreateNetworkForTactile();
-            TrainNetworkForTactile(0.01);
-
-            MessageBox.Show("Обучение завершено!",
-                            "Готово",
-                            MessageBoxButtons.OK);
-        }
-
         private void button5_Click(object sender, EventArgs e)
         {
             videoSourcePlayer1.Stop();
             timer1.Stop();
-        }
-
-        private void button4_Click(object sender, EventArgs e)
-        {
-            TestNetworkForTactile();
         }
     }
 }
