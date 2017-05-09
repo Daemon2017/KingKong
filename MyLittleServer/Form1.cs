@@ -17,10 +17,9 @@ namespace MyLittleServer
         static string hostname = "jabber.ru";
         static string username = "";
         static string password = "";
-<<<<<<< HEAD
+
         dbConnector dataBaseConn;
-=======
->>>>>>> origin/master
+
         XmppClient client = new XmppClient(hostname, username, password);
 
         string workMode;
