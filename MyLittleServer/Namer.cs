@@ -10,8 +10,6 @@ namespace MyLittleServer
             InitializeComponent();
         }
 
-        string[] data;
-
         public string newName;
 
         private void button1_Click(object sender, EventArgs e)

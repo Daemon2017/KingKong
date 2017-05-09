@@ -9,8 +9,6 @@ namespace MyLittleServer
     {
         DataTable dataBase;
         MySqlConnectionStringBuilder mysqlCSB;
-        string result;
-        byte[] bytes = new byte[1024];
         public static string data = null;
         public string[] rowsAsString;
 
@@ -143,12 +141,12 @@ namespace MyLittleServer
 
             using (MySqlConnection con = new MySqlConnection())
             {
-                con.ConnectionString = mysqlCSB.ConnectionString;
-                MySqlCommand com = new MySqlCommand(request, con);
-                con.Open();
-
                 try
                 {
+                    con.ConnectionString = mysqlCSB.ConnectionString;
+                    MySqlCommand com = new MySqlCommand(request, con);
+                    con.Open();
+
                     using (MySqlDataReader dr = com.ExecuteReader())
                     {
                         if (dr.HasRows)
