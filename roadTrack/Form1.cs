@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Collections.Generic;
 using AForge.Video.DirectShow;
-using MessagingToolkit.Barcode;
 using S22.Xmpp.Client;
+using BarcodeLib.BarcodeReader;
+using System.Text;
 
 namespace roadTrack
 {
@@ -119,28 +119,19 @@ namespace roadTrack
 
         private void DecodeBarcode(Bitmap image)
         {
-            Dictionary<DecodeOptions, object> decodingOptions = new Dictionary<DecodeOptions, object>();
-            List<BarcodeFormat> possibleFormats = new List<BarcodeFormat>(1);
+            string[] results = BarcodeReader.read(image, BarcodeReader.EAN13);
 
-            possibleFormats.Add(BarcodeFormat.EAN13);
-            decodingOptions.Add(DecodeOptions.PossibleFormats, possibleFormats);
-            decodingOptions.Add(DecodeOptions.PureBarcode, "");
-            decodingOptions.Add(DecodeOptions.AutoRotate, true);
-
-            try
+            if (results != null)
             {
-                BarcodeDecoder barcodeDecoder = new BarcodeDecoder();
-                Result newDecodedResult = barcodeDecoder.Decode(image, decodingOptions);
+                var sb = new StringBuilder(results[0]);
+                string changer = "4";
+                var temp = changer.ToCharArray(0, 1);
+                sb[0] = temp[0];
+                results[0] = sb.ToString();
 
-                image = null;
-
-                Connect(newDecodedResult.Text, workMode);
+                Connect(results[0], workMode);
 
                 locked = true;
-            }
-            catch (NotFoundException)
-            {
-
             }
         }
 

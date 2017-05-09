@@ -76,8 +76,8 @@
       <HintPath>..\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="MessagingToolkit.Barcode">
-      <HintPath>.\MessagingToolkit.Barcode.dll</HintPath>
+    <Reference Include="BarcodeLib.BarcodeReader">
+      <HintPath>.\BarcodeLib.BarcodeReader.dll</HintPath>
     </Reference>
     <Reference Include="S22.Xmpp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\S22.Xmpp.1.0.0.0\lib\net45\S22.Xmpp.dll</HintPath>
