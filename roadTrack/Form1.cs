@@ -11,8 +11,8 @@ namespace roadTrack
     public partial class Form1 : Form
     {
         static string hostname = "jabber.ru";
-        static string username = "Daemon2017";
-        static string password = "Lamok007";
+        static string username = "";
+        static string password = "";
         XmppClient client = new XmppClient(hostname, username, password);
 
         bool locked = false;
