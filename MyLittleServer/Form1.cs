@@ -15,8 +15,9 @@ namespace MyLittleServer
         long[] idArray = new long[0];
 
         static string hostname = "jabber.ru";
-        static string username = "Daemon2017";
-        static string password = "Lamok007";
+        static string username = "";
+        static string password = "";
+        dbConnector dataBaseConn;
         XmppClient client = new XmppClient(hostname, username, password);
 
         string workMode;
@@ -24,44 +25,22 @@ namespace MyLittleServer
         public Form1()
         {
             InitializeComponent();
-
+            
             client.Message += OnNewMessage;
         }
 
         private void Connect(string message)
         {
-            bool idExist = false;
-
-            // Проверяем нет ли вещи с таким штрихом-кодом в базе
-            for (int w = 0; w < idArray.Length; w++)
-            {
-                if (Convert.ToInt64(message) == idArray[w])
-                {
-                    idExist = true;
-
-                    if (workMode == "INC")
-                    {
-                        countArray[w]++;
-                    }
-                    else if (workMode == "DEC")
-                    {
-                        if (countArray[w] > 0)
-                        {
-                            countArray[w]--;
-                        }
-                    }
-
-                    RefreshDataGrid();
-                }
+            // Проверяем нет ли вещи с таким штрихом-кодом в базе            
+            if (dataBaseConn.checkBarcodeExisting(Convert.ToInt64(message)))
+            { 
+                dataBaseConn.updateData(workMode, Convert.ToInt64(message));
+                logTextBox_textChange("Barcode есть, изменил количество");
             }
-
-
-            if (idExist == true)
+            
+            else if (!dataBaseConn.checkBarcodeExisting(Convert.ToInt64(message)))
             {
-
-            }
-            else
-            {
+                logTextBox_textChange("Barcode нет, парсю имя");
                 HtmlWeb hw = new HtmlWeb();
                 HtmlAgilityPack.HtmlDocument doc = hw.Load(@"https://barcodes.olegon.ru/" + message);
                 var nodes = doc.DocumentNode.SelectNodes("//div[@id='names']");
@@ -74,8 +53,10 @@ namespace MyLittleServer
                 }
 
                 responseData = responseData.Remove(0, 22);
-
-                bool nameExist = false;
+                responseData = responseData.Replace('"', ' ');
+                responseData = responseData.Replace('\'', ' ');
+                responseData = responseData.Replace('{', ' ');
+                responseData = responseData.Replace('}', ' ');
 
                 // Если в базе сайта нет названия - даем предмету характерное название
                 if (responseData == "")
@@ -89,76 +70,34 @@ namespace MyLittleServer
                 if (responseData != null)
                 {
                     // Проверяем нет ли вещи с таким именем в базе
-                    for (int a = 0; a < namesArray.GetLength(0); a++)
-                    {
-                        if (namesArray[a] == responseData)
-                        {
-                            nameExist = true;
-
-                            if (workMode == "INC")
-                            {
-                                countArray[a]++;
-                            }
-                            else if (workMode == "DEC")
-                            {
-                                if (countArray[a] > 0)
-                                {
-                                    countArray[a]--;
-                                }
-                            }
-
-                            RefreshDataGrid();
-                        }
-                    }
-
                     if (workMode == "INC")
                     {
-                        if (nameExist == false)
+                        if(!dataBaseConn.checkNameExisting(responseData))
                         {
-                            Array.Resize(ref idArray, idArray.Length + 1);
-                            idArray[idArray.Length - 1] = Convert.ToInt64(message);
-
-                            Array.Resize(ref namesArray, namesArray.Length + 1);
-                            namesArray[namesArray.Length - 1] = responseData;
-
-                            Array.Resize(ref countArray, countArray.Length + 1);
-                            countArray[countArray.Length - 1] = 1;
-
-                            RefreshDataGrid();
+                            logTextBox_textChange("Имени нет, вставляю " + responseData);
+                            dataBaseConn.insertData(responseData, 1, Convert.ToInt64(message));
                         }
                     }
                 }
             }
+
+            RefreshDataGrid();
         }
 
         private void RefreshDataGrid()
         {
             dataGridView1.Invoke((MethodInvoker)delegate
             {
+                dataGridView1.DataSource = null;
                 dataGridView1.Rows.Clear();
-
-                for (int i = 0; i < namesArray.GetLength(0); i++)
-                {
-                    dataGridView1.Rows.Add();
-                    dataGridView1[0, i].Value = namesArray[i];
-                }
-
-                for (int i = 0; i < countArray.GetLength(0); i++)
-                {
-                    dataGridView1[1, i].Value = countArray[i];
-                }
-
-                for (int i = 0; i < idArray.GetLength(0); i++)
-                {
-                    dataGridView1[2, i].Value = idArray[i];
-                }
+                dataGridView1.DataSource = dataBaseConn.GetComments("SELECT * FROM things ORDER BY `id` ASC");
             });
         }
 
         private void OnNewMessage(object sender, MessageEventArgs e)
         {
             string data = e.Message.Body;
-
+            
             string[] substrings = data.Split(',');
 
             workMode = substrings[1];
@@ -177,6 +116,17 @@ namespace MyLittleServer
         private void Form1_Load(object sender, EventArgs e)
         {
             net = null;
+            try
+            {
+                dataBaseConn = new dbConnector();
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Не найдена база данных! Проверьте запущен ли сервер БД",
+                               "Нет подключения к БД",
+                               MessageBoxButtons.OK);
+            }
+
             try
             {
                 var json_temp = File.ReadAllLines("NetworkStructure.json");
@@ -203,6 +153,7 @@ namespace MyLittleServer
 
             try
             {
+                client.Tls = true;
                 client.Connect();
             }
             catch
@@ -211,6 +162,16 @@ namespace MyLittleServer
                                 "Ошибка",
                                 MessageBoxButtons.OK);
             }
+
+            RefreshDataGrid();
+        }
+
+        private void logTextBox_textChange(string text)
+        {
+            log_textBox.Invoke((MethodInvoker)delegate
+            {
+                log_textBox.Text = text;
+            });
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -228,6 +189,11 @@ namespace MyLittleServer
         private void button4_Click(object sender, EventArgs e)
         {
             TestNetworkForTactile();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            RefreshDataGrid();
         }
     }
 }
