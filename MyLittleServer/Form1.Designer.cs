@@ -105,7 +105,7 @@
             // 
             this.log_textBox.Enabled = false;
             this.log_textBox.Location = new System.Drawing.Point(12, 352);
-            this.log_textBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.log_textBox.Margin = new System.Windows.Forms.Padding(2);
             this.log_textBox.Name = "log_textBox";
             this.log_textBox.Size = new System.Drawing.Size(501, 20);
             this.log_textBox.TabIndex = 19;
@@ -122,7 +122,7 @@
             this.Controls.Add(this.button3);
             this.Controls.Add(this.dataGridView1);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "MyLittleServer";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();

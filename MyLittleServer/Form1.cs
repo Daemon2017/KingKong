@@ -20,7 +20,7 @@ namespace MyLittleServer
 
         dbConnector dataBaseConn;
 
-        XmppClient client = new XmppClient(hostname, username, password);
+        XmppClient clientXMPP = new XmppClient(hostname, username, password);
 
         string workMode;
 
@@ -28,7 +28,7 @@ namespace MyLittleServer
         {
             InitializeComponent();
             
-            client.Message += OnNewMessage;
+            clientXMPP.Message += OnNewMessage;
         }
 
         private void Connect(string message)
@@ -38,23 +38,23 @@ namespace MyLittleServer
             { 
                 dataBaseConn.updateData(workMode, Convert.ToInt64(message));
                 logTextBox_textChange("Barcode есть, изменил количество");
-            }
-            
+            }            
             else if (!dataBaseConn.checkBarcodeExisting(Convert.ToInt64(message)))
             {
                 logTextBox_textChange("Barcode нет, парсю имя");
-                HtmlWeb hw = new HtmlWeb();
-                HtmlAgilityPack.HtmlDocument doc = hw.Load(@"https://barcodes.olegon.ru/" + message);
-                var nodes = doc.DocumentNode.SelectNodes("//div[@id='names']");
 
                 string responseData = "";
+
+                HtmlWeb hw = new HtmlWeb();
+                HtmlAgilityPack.HtmlDocument doc = hw.Load(@"https://ean13.org/?query=" + message + "&page=search");
+                var nodes = doc.DocumentNode.SelectNodes("//div[@class='collist-2']");
 
                 foreach (HtmlNode node in nodes)
                 {
                     responseData = node.InnerText;
                 }
 
-                responseData = responseData.Remove(0, 22);
+                responseData = responseData.Remove(0, 13);
                 responseData = responseData.Replace('"', ' ');
                 responseData = responseData.Replace('\'', ' ');
                 responseData = responseData.Replace('{', ' ');
@@ -109,9 +109,9 @@ namespace MyLittleServer
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (client != null)
+            if (clientXMPP != null)
             {
-                client.Close();
+                clientXMPP.Close();
             }
         }
 
@@ -155,8 +155,8 @@ namespace MyLittleServer
 
             try
             {
-                client.Tls = true;
-                client.Connect();
+                clientXMPP.Tls = true;
+                clientXMPP.Connect();
             }
             catch
             {
