@@ -2,6 +2,7 @@
 using System.Data;
 using MySql.Data.MySqlClient;
 using System.Windows.Forms;
+using System.IO;
 
 namespace MyLittleServer
 {
@@ -11,6 +12,8 @@ namespace MyLittleServer
         MySqlConnectionStringBuilder mysqlCSB;
         public static string data = null;
         public string[] rowsAsString;
+
+        string[] mySqlConfig = new string[4];
 
         public string strNeedsString = @"SELECT 
                                         NAME,
@@ -28,10 +31,11 @@ namespace MyLittleServer
         {
             dataBase = new DataTable();
             mysqlCSB = new MySqlConnectionStringBuilder();
-            mysqlCSB.Server = "127.0.0.1";
-            mysqlCSB.Database = "thingsbd";
-            mysqlCSB.UserID = "clientFrecken";
-            mysqlCSB.Password = "freckenpassword";
+            mysqlCSB.Server = "";
+            mysqlCSB.Port = 3306;
+            mysqlCSB.Database = "";
+            mysqlCSB.UserID = "";
+            mysqlCSB.Password = "";
         }
         
         public bool checkBarcodeExisting(long barcode)
@@ -132,13 +136,16 @@ namespace MyLittleServer
 
         public DataTable GetComments(string request)
         {
+            mySqlConfig= File.ReadAllLines("SQL.cfg");
+
             dataBase = new DataTable();
             mysqlCSB = new MySqlConnectionStringBuilder();
-            mysqlCSB.Server = "127.0.0.1";
-            mysqlCSB.Database = "thingsbd";
-            mysqlCSB.UserID = "clientFrecken";
-            mysqlCSB.Password = "freckenpassword";
-
+            mysqlCSB.Server = mySqlConfig[0];
+            mysqlCSB.Port = 3306;
+            mysqlCSB.Database = mySqlConfig[1];
+            mysqlCSB.UserID = mySqlConfig[2];
+            mysqlCSB.Password = mySqlConfig[3];
+            
             using (MySqlConnection con = new MySqlConnection())
             {
                 try
