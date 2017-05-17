@@ -3,13 +3,16 @@ using System.Drawing;
 using System.Windows.Forms;
 using AForge.Video.DirectShow;
 using S22.Xmpp.Client;
-using BarcodeLib.BarcodeReader;
-using System.Text;
 
 namespace roadTrack
 {
     public partial class Form1 : Form
     {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
         static string hostname = "jabber.ru";
         static string username = "";
         static string password = "";
@@ -27,11 +30,6 @@ namespace roadTrack
         private int statIndex = 0;
         private int statReady = 0;
         private int[] statCount = new int[statLength];
-
-        public Form1()
-        {
-            InitializeComponent();
-        }
 
         private void button1_Click(object sender,
                                    EventArgs e)
@@ -82,15 +80,17 @@ namespace roadTrack
                 client.Close();
             }
 
-            videoSourcePlayer1.Stop();
             timer1.Stop();
+            videoSourcePlayer1.Stop();
         }
 
         private void videoSourcePlayer1_NewFrame(object sender,
                                                  ref Bitmap inputImage)
         {
             if (framesNum > 1)
-            {
+            {           
+                pictureBox1.Image = DetectBarcode(inputImage);
+
                 if (locked == false)
                 {
                     DecodeBarcode(inputImage);
@@ -115,29 +115,6 @@ namespace roadTrack
             });
 
             framesNum++;
-        }
-
-        private void DecodeBarcode(Bitmap image)
-        {
-            string[] results = BarcodeReader.read(image, BarcodeReader.EAN13);
-
-            if (results != null)
-            {
-                var sb = new StringBuilder(results[0]);
-                string changer = "4";
-                var temp = changer.ToCharArray(0, 1);
-                sb[0] = temp[0];
-                results[0] = sb.ToString();
-
-                Connect(results[0], workMode);
-
-                locked = true;
-            }
-        }
-
-        private void Connect(string barcode, string mode)
-        {
-            client.SendMessage(username + "@" + hostname, barcode + "," + mode);
         }
 
         private void timer1_Tick(object sender,
@@ -172,8 +149,8 @@ namespace roadTrack
 
         private void button5_Click(object sender, EventArgs e)
         {
-            videoSourcePlayer1.Stop();
             timer1.Stop();
+            videoSourcePlayer1.Stop();
         }
     }
 }
