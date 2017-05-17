@@ -3,6 +3,7 @@ using BarcodeLib.BarcodeReader;
 using System.Text;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
+using System;
 
 namespace roadTrack
 {
@@ -39,10 +40,10 @@ namespace roadTrack
                                 gradient);
 
             Mat blured = new Mat();
-            OpenCvSharp.Size s = new OpenCvSharp.Size(7, 7);
+            OpenCvSharp.Size brushSize = new OpenCvSharp.Size(9, 9);
             Cv2.Blur(gradient,
                      blured,
-                     s);
+                     brushSize);
             Mat treshed = new Mat();
             Cv2.Threshold(blured,
                           treshed,
@@ -50,9 +51,9 @@ namespace roadTrack
                           255,
                           ThresholdTypes.Binary);
 
-            s = new OpenCvSharp.Size(21, 7);
+            brushSize = new OpenCvSharp.Size(21, 7);
             Mat kernel = Cv2.GetStructuringElement(MorphShapes.Rect,
-                                                   s);
+                                                   brushSize);
             Mat closed = new Mat();
             Cv2.MorphologyEx(treshed,
                              closed,
@@ -67,10 +68,10 @@ namespace roadTrack
             Cv2.Dilate(closed, closed, null, null, 5);
 
             OpenCvSharp.Point[][] contours;
-            HierarchyIndex[] h;
+            HierarchyIndex[] hierarchy;
             Cv2.FindContours(closed,
                              out contours,
-                             out h,
+                             out hierarchy,
                              RetrievalModes.External,
                              ContourApproximationModes.ApproxSimple);
 
@@ -90,20 +91,95 @@ namespace roadTrack
                 }
             }
 
-            Mat final = BitmapConverter.ToMat(inputImage);
+            if (contours.Length > 0)
+            {
+                OpenCvSharp.Point[][] big;
+                big = new OpenCvSharp.Point[1][];
+                big[0] = new OpenCvSharp.Point[4];
 
-            Cv2.DrawContours(final,
-                             contours,
-                             largestContourIndex,
-                             new Scalar(0, 255, 0),
-                             2,
-                             LineTypes.Link8,
-                             h,
-                             int.MaxValue);
+                big[0][0].X = Convert.ToInt32(contours[largestContourIndex][0].X);
+                big[0][0].Y = Convert.ToInt32(contours[largestContourIndex][0].Y);
 
-            return BitmapConverter.ToBitmap(final);
+                big[0][1].X = Convert.ToInt32(contours[largestContourIndex][0].X);
+                big[0][1].Y = Convert.ToInt32(contours[largestContourIndex][0].Y);
+
+                big[0][2].X = Convert.ToInt32(contours[largestContourIndex][0].X);
+                big[0][2].Y = Convert.ToInt32(contours[largestContourIndex][0].Y);
+
+                big[0][3].X = Convert.ToInt32(contours[largestContourIndex][0].X);
+                big[0][3].Y = Convert.ToInt32(contours[largestContourIndex][0].Y);
+
+                for (int i = 0; i < contours[largestContourIndex].Length; i++)
+                {
+                    if (contours[largestContourIndex][i].X < big[0][0].X)
+                    {
+                        big[0][0].X = Convert.ToInt32(contours[largestContourIndex][i].X);
+                    }
+
+                    if (contours[largestContourIndex][i].Y < big[0][0].Y)
+                    {
+                        big[0][0].Y = Convert.ToInt32(contours[largestContourIndex][i].Y);
+                    }
+
+                    if (contours[largestContourIndex][i].X < big[0][1].X)
+                    {
+                        big[0][1].X = Convert.ToInt32(contours[largestContourIndex][i].X);
+                    }
+
+                    if (contours[largestContourIndex][i].Y > big[0][1].Y)
+                    {
+                        big[0][1].Y = Convert.ToInt32(contours[largestContourIndex][i].Y);
+                    }
+
+                    if (contours[largestContourIndex][i].X > big[0][2].X)
+                    {
+                        big[0][2].X = Convert.ToInt32(contours[largestContourIndex][i].X);
+                    }
+
+                    if (contours[largestContourIndex][i].Y > big[0][2].Y)
+                    {
+                        big[0][2].Y = Convert.ToInt32(contours[largestContourIndex][i].Y);
+                    }
+
+                    if (contours[largestContourIndex][i].X > big[0][3].X)
+                    {
+                        big[0][3].X = Convert.ToInt32(contours[largestContourIndex][i].X);
+                    }
+
+                    if (contours[largestContourIndex][i].Y < big[0][3].Y)
+                    {
+                        big[0][3].Y = Convert.ToInt32(contours[largestContourIndex][i].Y);
+                    }
+                }
+
+                verticalSize = Math.Abs(big[0][0].Y - big[0][1].Y);
+                horizontalSize = Math.Abs(big[0][0].X - big[0][3].X);
+
+                HierarchyIndex[] myHierarchy = new HierarchyIndex[1];
+                myHierarchy[0] = new HierarchyIndex();
+                myHierarchy[0].Child = -1;
+                myHierarchy[0].Next = 1;
+                myHierarchy[0].Parent = -1;
+                myHierarchy[0].Previous = -1;
+
+                Mat final = BitmapConverter.ToMat(inputImage);
+                Cv2.DrawContours(final,
+                                 big,
+                                 0,                                 
+                                 new Scalar(0, 255, 0),
+                                 2,
+                                 LineTypes.Link8,
+                                 myHierarchy,
+                                 int.MaxValue);                                 
+
+                return BitmapConverter.ToBitmap(final);
+            }
+
+            return BitmapConverter.ToBitmap(img);
         }
 
+        int horizontalSize = 0,
+            verticalSize = 0;
 
         private void DecodeBarcode(Bitmap image)
         {
