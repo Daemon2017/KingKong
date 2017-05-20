@@ -11,74 +11,75 @@ namespace roadTrack
     {
         private bool DetectBarcode(Bitmap startImg)
         {
-            Mat imgForOperations = new Mat();
-            Cv2.CvtColor(BitmapConverter.ToMat(startImg),
-                         imgForOperations,
-                         ColorConversionCodes.BGR2GRAY);
-
-            Scalar imgMean = Cv2.Mean(imgForOperations);
-
-            Mat gradX = new Mat();
-            Cv2.Sobel(imgForOperations,
-                      gradX,
-                      MatType.CV_8U,
-                      1,
-                      0);
-            Mat gradY = new Mat();
-            Cv2.Sobel(imgForOperations,
-                      gradY,
-                      MatType.CV_8U,
-                      0,
-                      1);
-
-            Cv2.Subtract(gradX,
-                         gradY,
-                         imgForOperations);
-
-            gradX.Dispose();
-            gradY.Dispose();
-
-            Cv2.ConvertScaleAbs(imgForOperations,
-                                imgForOperations);
-
-            OpenCvSharp.Size brushSize = new OpenCvSharp.Size(9, 9);
-            Cv2.Blur(imgForOperations,
-                     imgForOperations,
-                     brushSize);
-
-            Cv2.Threshold(imgForOperations,
-                          imgForOperations,
-                          (int)(imgMean[0] * 0.65),
-                          255,
-                          ThresholdTypes.Binary);
-
-            brushSize = new OpenCvSharp.Size(21, 7);
-            Mat kernel = Cv2.GetStructuringElement(MorphShapes.Rect,
-                                                   brushSize);
-
-            Cv2.MorphologyEx(imgForOperations,
-                             imgForOperations,
-                             MorphTypes.Close,
-                             kernel);
-
-            kernel.Dispose();
-
-            Cv2.Erode(imgForOperations,
-                      imgForOperations,
-                      null,
-                      null,
-                      5);
-            Cv2.Dilate(imgForOperations, imgForOperations, null, null, 5);
-
             OpenCvSharp.Point[][] contours;
-            HierarchyIndex[] hierarchy;
-            Cv2.FindContours(imgForOperations,
-                             out contours,
-                             out hierarchy,
-                             RetrievalModes.External,
-                             ContourApproximationModes.ApproxSimple);
 
-            imgForOperations.Dispose();
+            using (Mat imgForOperations = new Mat())
+            {
+                Cv2.CvtColor(BitmapConverter.ToMat(startImg),
+                             imgForOperations,
+                             ColorConversionCodes.BGR2GRAY);
+
+                Scalar imgMean = Cv2.Mean(imgForOperations);
+
+                using (Mat gradX = new Mat(),
+                           gradY = new Mat())
+                {
+                    Cv2.Sobel(imgForOperations,
+                              gradX,
+                              MatType.CV_8U,
+                              1,
+                              0);
+
+                    Cv2.Sobel(imgForOperations,
+                              gradY,
+                              MatType.CV_8U,
+                              0,
+                              1);
+
+                    Cv2.Subtract(gradX,
+                                 gradY,
+                                 imgForOperations);
+                }
+
+                Cv2.ConvertScaleAbs(imgForOperations,
+                                    imgForOperations);
+
+                OpenCvSharp.Size brushSize = new OpenCvSharp.Size(9, 9);
+                Cv2.Blur(imgForOperations,
+                         imgForOperations,
+                         brushSize);
+
+                Cv2.Threshold(imgForOperations,
+                              imgForOperations,
+                              (int)(imgMean[0] * 0.65),
+                              255,
+                              ThresholdTypes.Binary);
+
+                brushSize = new OpenCvSharp.Size(21, 7);
+
+                using (Mat kernel = Cv2.GetStructuringElement(MorphShapes.Rect,
+                                                       brushSize))
+                {
+                    Cv2.MorphologyEx(imgForOperations,
+                                     imgForOperations,
+                                     MorphTypes.Close,
+                                     kernel);
+                }
+
+                Cv2.Erode(imgForOperations,
+                          imgForOperations,
+                          null,
+                          null,
+                          5);
+                Cv2.Dilate(imgForOperations, imgForOperations, null, null, 5);
+
+                HierarchyIndex[] hierarchy;
+                Cv2.FindContours(imgForOperations,
+                                 out contours,
+                                 out hierarchy,
+                                 RetrievalModes.External,
+                                 ContourApproximationModes.ApproxSimple);
+            }
 
             double largestArea = 0;
             int largestContourIndex = 0;
@@ -112,18 +113,19 @@ namespace roadTrack
 
                 if (horizontalSize >= 100 && verticalSize >= 50)
                 {
-                    Mat finalImg = BitmapConverter.ToMat(startImg);
+                    using (Mat finalImg = BitmapConverter.ToMat(startImg))
+                    {
+                        Cv2.DrawContours(finalImg,
+                                         smoothedContour,
+                                         0,
+                                         new Scalar(0, 255, 0),
+                                         2,
+                                         LineTypes.Link8,
+                                         myHierarchy,
+                                         int.MaxValue);
 
-                    Cv2.DrawContours(finalImg,
-                                     smoothedContour,
-                                     0,
-                                     new Scalar(0, 255, 0),
-                                     2,
-                                     LineTypes.Link8,
-                                     myHierarchy,
-                                     int.MaxValue);
-
-                    pictureBox1.Image = BitmapConverter.ToBitmap(finalImg);
+                        pictureBox1.Image = BitmapConverter.ToBitmap(finalImg);
+                    }
 
                     return true;
                 }

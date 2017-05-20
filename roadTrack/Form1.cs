@@ -96,7 +96,7 @@ namespace roadTrack
                 {
                     if (locked == true)
                     {
-                        if (lockedFrames < 10)
+                        if (lockedFrames < 5)
                         {
                             lockedFrames++;
                         }
