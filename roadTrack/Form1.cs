@@ -81,8 +81,15 @@ namespace roadTrack
                 client.Close();
             }
 
-            timer1.Stop();
-            videoSourcePlayer1.Stop();
+            if (timer1.Enabled == true)
+            {
+                timer1.Stop();
+            }
+
+            if (videoSourcePlayer1.Enabled == true)
+            {
+                videoSourcePlayer1.Stop();
+            }
         }
 
         private void videoSourcePlayer1_NewFrame(object sender,
@@ -162,8 +169,15 @@ namespace roadTrack
 
         private void button5_Click(object sender, EventArgs e)
         {
-            timer1.Stop();
-            videoSourcePlayer1.Stop();
+            if (timer1.Enabled == true)
+            {
+                timer1.Stop();
+            }
+
+            if (videoSourcePlayer1.Enabled == true)
+            {
+                videoSourcePlayer1.Stop();
+            }
         }
     }
 }

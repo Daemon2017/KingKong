@@ -97,6 +97,8 @@ namespace roadTrack
                 }
             }
 
+            GC.Collect();
+
             if (contours.Length != 0)
             {
                 HierarchyIndex[] myHierarchy = new HierarchyIndex[1];
