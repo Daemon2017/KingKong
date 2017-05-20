@@ -20,7 +20,6 @@ namespace roadTrack
 
         bool locked = false;
         short lockedFrames = 0;
-
         bool previousDetection = false;
 
         int framesNum = 0;

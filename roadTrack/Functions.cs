@@ -9,10 +9,10 @@ namespace roadTrack
 {
     public partial class Form1
     {
-        private bool DetectBarcode(Bitmap startImage)
+        private bool DetectBarcode(Bitmap startImg)
         {
             Mat imgForOperations = new Mat();
-            Cv2.CvtColor(BitmapConverter.ToMat(startImage),
+            Cv2.CvtColor(BitmapConverter.ToMat(startImg),
                          imgForOperations,
                          ColorConversionCodes.BGR2GRAY);
 
@@ -35,6 +35,9 @@ namespace roadTrack
                          gradY,
                          imgForOperations);
 
+            gradX.Dispose();
+            gradY.Dispose();
+
             Cv2.ConvertScaleAbs(imgForOperations,
                                 imgForOperations);
 
@@ -52,10 +55,13 @@ namespace roadTrack
             brushSize = new OpenCvSharp.Size(21, 7);
             Mat kernel = Cv2.GetStructuringElement(MorphShapes.Rect,
                                                    brushSize);
+
             Cv2.MorphologyEx(imgForOperations,
                              imgForOperations,
                              MorphTypes.Close,
                              kernel);
+
+            kernel.Dispose();
 
             Cv2.Erode(imgForOperations,
                       imgForOperations,
@@ -71,6 +77,8 @@ namespace roadTrack
                              out hierarchy,
                              RetrievalModes.External,
                              ContourApproximationModes.ApproxSimple);
+
+            imgForOperations.Dispose();
 
             double largestArea = 0;
             int largestContourIndex = 0;
@@ -104,7 +112,8 @@ namespace roadTrack
 
                 if (horizontalSize >= 100 && verticalSize >= 50)
                 {
-                    Mat finalImg = BitmapConverter.ToMat(startImage);
+                    Mat finalImg = BitmapConverter.ToMat(startImg);
+
                     Cv2.DrawContours(finalImg,
                                      smoothedContour,
                                      0,
@@ -193,9 +202,9 @@ namespace roadTrack
             return smoothedContour;
         }
 
-        private void DecodeBarcode(Bitmap image)
+        private void DecodeBarcode(Bitmap img)
         {
-            string[] results = BarcodeReader.read(image, BarcodeReader.EAN13);
+            string[] results = BarcodeReader.read(img, BarcodeReader.EAN13);
 
             if (results != null)
             {
