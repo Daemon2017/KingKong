@@ -21,6 +21,8 @@ namespace roadTrack
         bool locked = false;
         short lockedFrames = 0;
 
+        bool previousDetection = false;
+
         int framesNum = 0;
 
         string workMode = "INC";
@@ -88,25 +90,37 @@ namespace roadTrack
                                                  ref Bitmap inputImage)
         {
             if (framesNum > 1)
-            {           
-                pictureBox1.Image = DetectBarcode(inputImage);
+            {
+                bool detection = DetectBarcode(inputImage);
 
-                if (locked == false)
+                if (detection == true)
                 {
-                    DecodeBarcode(inputImage);
-                }
-                else
-                {
-                    if (lockedFrames < 15)
+                    if (locked == true)
                     {
-                        lockedFrames++;
+                        if (lockedFrames < 10)
+                        {
+                            lockedFrames++;
+                        }
+                        else
+                        {
+                            locked = false;
+                            lockedFrames = 0;
+                        }
                     }
                     else
                     {
-                        locked = false;
-                        lockedFrames = 0;
+                        if (previousDetection == true)
+                        {
+
+                        }
+                        else
+                        {
+                            DecodeBarcode(inputImage);
+                        }
                     }
                 }
+
+                previousDetection = detection;
             }
 
             label2.Invoke((MethodInvoker)delegate

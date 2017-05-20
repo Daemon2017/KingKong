@@ -9,44 +9,42 @@ namespace roadTrack
 {
     public partial class Form1
     {
-        private Image DetectBarcode(Bitmap inputImage)
+        private bool DetectBarcode(Bitmap startImage)
         {
-            Mat img = BitmapConverter.ToMat(inputImage);
-            Mat imgGray = new Mat();
-            Cv2.CvtColor(img,
-                         imgGray,
+            Mat imgForOperations = new Mat();
+            Cv2.CvtColor(BitmapConverter.ToMat(startImage),
+                         imgForOperations,
                          ColorConversionCodes.BGR2GRAY);
 
-            Scalar imgMean = Cv2.Mean(imgGray);
+            Scalar imgMean = Cv2.Mean(imgForOperations);
 
             Mat gradX = new Mat();
-            Cv2.Sobel(imgGray,
+            Cv2.Sobel(imgForOperations,
                       gradX,
                       MatType.CV_8U,
                       1,
                       0);
             Mat gradY = new Mat();
-            Cv2.Sobel(imgGray,
+            Cv2.Sobel(imgForOperations,
                       gradY,
                       MatType.CV_8U,
                       0,
                       1);
 
-            Mat gradient = new Mat();
             Cv2.Subtract(gradX,
                          gradY,
-                         gradient);
-            Cv2.ConvertScaleAbs(gradient,
-                                gradient);
+                         imgForOperations);
 
-            Mat blured = new Mat();
+            Cv2.ConvertScaleAbs(imgForOperations,
+                                imgForOperations);
+
             OpenCvSharp.Size brushSize = new OpenCvSharp.Size(9, 9);
-            Cv2.Blur(gradient,
-                     blured,
+            Cv2.Blur(imgForOperations,
+                     imgForOperations,
                      brushSize);
-            Mat treshed = new Mat();
-            Cv2.Threshold(blured,
-                          treshed,
+
+            Cv2.Threshold(imgForOperations,
+                          imgForOperations,
                           (int)(imgMean[0] * 0.65),
                           255,
                           ThresholdTypes.Binary);
@@ -54,22 +52,21 @@ namespace roadTrack
             brushSize = new OpenCvSharp.Size(21, 7);
             Mat kernel = Cv2.GetStructuringElement(MorphShapes.Rect,
                                                    brushSize);
-            Mat closed = new Mat();
-            Cv2.MorphologyEx(treshed,
-                             closed,
+            Cv2.MorphologyEx(imgForOperations,
+                             imgForOperations,
                              MorphTypes.Close,
                              kernel);
 
-            Cv2.Erode(closed,
-                      closed,
+            Cv2.Erode(imgForOperations,
+                      imgForOperations,
                       null,
                       null,
                       5);
-            Cv2.Dilate(closed, closed, null, null, 5);
+            Cv2.Dilate(imgForOperations, imgForOperations, null, null, 5);
 
             OpenCvSharp.Point[][] contours;
             HierarchyIndex[] hierarchy;
-            Cv2.FindContours(closed,
+            Cv2.FindContours(imgForOperations,
                              out contours,
                              out hierarchy,
                              RetrievalModes.External,
@@ -91,70 +88,8 @@ namespace roadTrack
                 }
             }
 
-            if (contours.Length > 0)
+            if (contours.Length != 0)
             {
-                OpenCvSharp.Point[][] big;
-                big = new OpenCvSharp.Point[1][];
-                big[0] = new OpenCvSharp.Point[4];
-
-                big[0][0].X = Convert.ToInt32(contours[largestContourIndex][0].X);
-                big[0][0].Y = Convert.ToInt32(contours[largestContourIndex][0].Y);
-
-                big[0][1].X = Convert.ToInt32(contours[largestContourIndex][0].X);
-                big[0][1].Y = Convert.ToInt32(contours[largestContourIndex][0].Y);
-
-                big[0][2].X = Convert.ToInt32(contours[largestContourIndex][0].X);
-                big[0][2].Y = Convert.ToInt32(contours[largestContourIndex][0].Y);
-
-                big[0][3].X = Convert.ToInt32(contours[largestContourIndex][0].X);
-                big[0][3].Y = Convert.ToInt32(contours[largestContourIndex][0].Y);
-
-                for (int i = 0; i < contours[largestContourIndex].Length; i++)
-                {
-                    if (contours[largestContourIndex][i].X < big[0][0].X)
-                    {
-                        big[0][0].X = Convert.ToInt32(contours[largestContourIndex][i].X);
-                    }
-
-                    if (contours[largestContourIndex][i].Y < big[0][0].Y)
-                    {
-                        big[0][0].Y = Convert.ToInt32(contours[largestContourIndex][i].Y);
-                    }
-
-                    if (contours[largestContourIndex][i].X < big[0][1].X)
-                    {
-                        big[0][1].X = Convert.ToInt32(contours[largestContourIndex][i].X);
-                    }
-
-                    if (contours[largestContourIndex][i].Y > big[0][1].Y)
-                    {
-                        big[0][1].Y = Convert.ToInt32(contours[largestContourIndex][i].Y);
-                    }
-
-                    if (contours[largestContourIndex][i].X > big[0][2].X)
-                    {
-                        big[0][2].X = Convert.ToInt32(contours[largestContourIndex][i].X);
-                    }
-
-                    if (contours[largestContourIndex][i].Y > big[0][2].Y)
-                    {
-                        big[0][2].Y = Convert.ToInt32(contours[largestContourIndex][i].Y);
-                    }
-
-                    if (contours[largestContourIndex][i].X > big[0][3].X)
-                    {
-                        big[0][3].X = Convert.ToInt32(contours[largestContourIndex][i].X);
-                    }
-
-                    if (contours[largestContourIndex][i].Y < big[0][3].Y)
-                    {
-                        big[0][3].Y = Convert.ToInt32(contours[largestContourIndex][i].Y);
-                    }
-                }
-
-                verticalSize = Math.Abs(big[0][0].Y - big[0][1].Y);
-                horizontalSize = Math.Abs(big[0][0].X - big[0][3].X);
-
                 HierarchyIndex[] myHierarchy = new HierarchyIndex[1];
                 myHierarchy[0] = new HierarchyIndex();
                 myHierarchy[0].Child = -1;
@@ -162,24 +97,101 @@ namespace roadTrack
                 myHierarchy[0].Parent = -1;
                 myHierarchy[0].Previous = -1;
 
-                Mat final = BitmapConverter.ToMat(inputImage);
-                Cv2.DrawContours(final,
-                                 big,
-                                 0,                                 
-                                 new Scalar(0, 255, 0),
-                                 2,
-                                 LineTypes.Link8,
-                                 myHierarchy,
-                                 int.MaxValue);                                 
+                OpenCvSharp.Point[][] smoothedContour = SmoothContour(contours, largestContourIndex);
 
-                return BitmapConverter.ToBitmap(final);
+                int horizontalSize = Math.Abs(smoothedContour[0][0].X - smoothedContour[0][3].X);
+                int verticalSize = Math.Abs(smoothedContour[0][0].Y - smoothedContour[0][1].Y);
+
+                if (horizontalSize >= 100 && verticalSize >= 50)
+                {
+                    Mat finalImg = BitmapConverter.ToMat(startImage);
+                    Cv2.DrawContours(finalImg,
+                                     smoothedContour,
+                                     0,
+                                     new Scalar(0, 255, 0),
+                                     2,
+                                     LineTypes.Link8,
+                                     myHierarchy,
+                                     int.MaxValue);
+
+                    pictureBox1.Image = BitmapConverter.ToBitmap(finalImg);
+
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
-
-            return BitmapConverter.ToBitmap(img);
+            else
+            {
+                return false;
+            }
         }
 
-        int horizontalSize = 0,
-            verticalSize = 0;
+        private OpenCvSharp.Point[][] SmoothContour(OpenCvSharp.Point[][] contours, int largestContourIndex)
+        {
+            OpenCvSharp.Point[][] smoothedContour;
+            smoothedContour = new OpenCvSharp.Point[1][];
+            smoothedContour[0] = new OpenCvSharp.Point[4];
+
+            smoothedContour[0][0].X = Convert.ToInt32(contours[largestContourIndex][0].X);
+            smoothedContour[0][0].Y = Convert.ToInt32(contours[largestContourIndex][0].Y);
+
+            smoothedContour[0][1].X = Convert.ToInt32(contours[largestContourIndex][0].X);
+            smoothedContour[0][1].Y = Convert.ToInt32(contours[largestContourIndex][0].Y);
+
+            smoothedContour[0][2].X = Convert.ToInt32(contours[largestContourIndex][0].X);
+            smoothedContour[0][2].Y = Convert.ToInt32(contours[largestContourIndex][0].Y);
+
+            smoothedContour[0][3].X = Convert.ToInt32(contours[largestContourIndex][0].X);
+            smoothedContour[0][3].Y = Convert.ToInt32(contours[largestContourIndex][0].Y);
+
+            for (int i = 0; i < contours[largestContourIndex].Length; i++)
+            {
+                if (contours[largestContourIndex][i].X < smoothedContour[0][0].X)
+                {
+                    smoothedContour[0][0].X = Convert.ToInt32(contours[largestContourIndex][i].X);
+                }
+
+                if (contours[largestContourIndex][i].Y < smoothedContour[0][0].Y)
+                {
+                    smoothedContour[0][0].Y = Convert.ToInt32(contours[largestContourIndex][i].Y);
+                }
+
+                if (contours[largestContourIndex][i].X < smoothedContour[0][1].X)
+                {
+                    smoothedContour[0][1].X = Convert.ToInt32(contours[largestContourIndex][i].X);
+                }
+
+                if (contours[largestContourIndex][i].Y > smoothedContour[0][1].Y)
+                {
+                    smoothedContour[0][1].Y = Convert.ToInt32(contours[largestContourIndex][i].Y);
+                }
+
+                if (contours[largestContourIndex][i].X > smoothedContour[0][2].X)
+                {
+                    smoothedContour[0][2].X = Convert.ToInt32(contours[largestContourIndex][i].X);
+                }
+
+                if (contours[largestContourIndex][i].Y > smoothedContour[0][2].Y)
+                {
+                    smoothedContour[0][2].Y = Convert.ToInt32(contours[largestContourIndex][i].Y);
+                }
+
+                if (contours[largestContourIndex][i].X > smoothedContour[0][3].X)
+                {
+                    smoothedContour[0][3].X = Convert.ToInt32(contours[largestContourIndex][i].X);
+                }
+
+                if (contours[largestContourIndex][i].Y < smoothedContour[0][3].Y)
+                {
+                    smoothedContour[0][3].Y = Convert.ToInt32(contours[largestContourIndex][i].Y);
+                }
+            }
+
+            return smoothedContour;
+        }
 
         private void DecodeBarcode(Bitmap image)
         {
@@ -196,6 +208,7 @@ namespace roadTrack
                 Connect(results[0], workMode);
 
                 locked = true;
+                lockedFrames = 0;
             }
         }
 
