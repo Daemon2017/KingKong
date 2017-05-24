@@ -79,8 +79,9 @@
       <HintPath>..\packages\AForge.Video.DirectShow.2.2.5\lib\AForge.Video.DirectShow.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="BarcodeLib.BarcodeReader">
-      <HintPath>.\BarcodeLib.BarcodeReader.dll</HintPath>
+    <Reference Include="ARSoft.Tools.Net, Version=1.8.1.0, Culture=neutral, PublicKeyToken=1940454cd762ec57, processorArchitecture=MSIL">
+      <HintPath>..\packages\ARSoft.Tools.Net.1.8.1\lib\ARSoft.Tools.Net.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="OpenCvSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=6adad1e807fea099, processorArchitecture=MSIL">
       <HintPath>..\packages\OpenCvSharp3-AnyCPU.3.2.0.20170419\lib\net46\OpenCvSharp.dll</HintPath>
@@ -100,8 +101,8 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="S22.Xmpp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\S22.Xmpp.1.0.0.0\lib\net45\S22.Xmpp.dll</HintPath>
+    <Reference Include="Sharp.Xmpp, Version=1.0.2.2, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Sharp.Xmpp.1.0.2.2\lib\net45\Sharp.Xmpp.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -126,6 +127,9 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Functions.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FunctionsXMPP.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Program.cs" />
@@ -168,6 +172,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Client\Examples.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

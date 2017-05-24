@@ -2,21 +2,17 @@
 using System.Drawing;
 using System.Windows.Forms;
 using AForge.Video.DirectShow;
-using S22.Xmpp.Client;
+using Sharp.Xmpp.Client;
+using System.Drawing.Imaging;
 
 namespace roadTrack
 {
     public partial class Form1 : Form
     {
-        public Form1()
-        {
-            InitializeComponent();
-        }
-
         static string hostname = "jabber.ru";
         static string username = "";
         static string password = "";
-        XmppClient client = new XmppClient(hostname, username, password);
+        static XmppClient clientXMPP = new XmppClient(hostname, username, password, 5222, true);
 
         bool locked = false;
         short lockedFrames = 0;
@@ -24,13 +20,22 @@ namespace roadTrack
 
         int framesNum = 0;
 
-        string workMode = "INC";
+        static string workMode = "INC";
 
         // Для вычисления FPS
         private const int statLength = 15;
         private int statIndex = 0;
         private int statReady = 0;
         private int[] statCount = new int[statLength];
+
+        public Form1()
+        {
+            InitializeComponent();
+
+            clientXMPP.FileTransferProgress += OnFileTransferProgress;
+            clientXMPP.FileTransferAborted += OnFileTransferAborted;
+            clientXMPP.FileTransferSettings.ForceInBandBytestreams = true;
+        }
 
         private void button1_Click(object sender,
                                    EventArgs e)
@@ -62,8 +67,7 @@ namespace roadTrack
         {
             try
             {
-                client.Tls = true;
-                client.Connect();
+                clientXMPP.Connect("client");
             }
             catch
             {
@@ -76,9 +80,9 @@ namespace roadTrack
         private void Form1_FormClosed(object sender,
                                       FormClosedEventArgs e)
         {
-            if (client != null)
+            if (clientXMPP.Connected == true)
             {
-                client.Close();
+                clientXMPP.Close();
             }
 
             if (timer1.Enabled == true)
@@ -103,7 +107,7 @@ namespace roadTrack
                 {
                     if (locked == true)
                     {
-                        if (lockedFrames < 5)
+                        if (lockedFrames < 10)
                         {
                             lockedFrames++;
                         }
@@ -121,7 +125,16 @@ namespace roadTrack
                         }
                         else
                         {
-                            DecodeBarcode(inputImage);
+                            locked = true;
+                            lockedFrames = 0;
+
+                            string dateTime = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
+                            inputImage.Save("img-" + dateTime + ".jpg", ImageFormat.Jpeg);
+
+                            clientXMPP.InitiateFileTransfer(username + "@" + hostname + "/server",
+                                                            "img-" + dateTime + ".jpg",
+                                                            workMode,
+                                                            FileTransferCallback);
                         }
                     }
                 }

@@ -1,6 +1,4 @@
 ﻿using System.Drawing;
-using BarcodeLib.BarcodeReader;
-using System.Text;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using System;
@@ -204,30 +202,6 @@ namespace roadTrack
             }
 
             return smoothedContour;
-        }
-
-        private void DecodeBarcode(Bitmap img)
-        {
-            string[] results = BarcodeReader.read(img, BarcodeReader.EAN13);
-
-            if (results != null)
-            {
-                var sb = new StringBuilder(results[0]);
-                string changer = "4";
-                var temp = changer.ToCharArray(0, 1);
-                sb[0] = temp[0];
-                results[0] = sb.ToString();
-
-                Connect(results[0], workMode);
-
-                locked = true;
-                lockedFrames = 0;
-            }
-        }
-
-        private void Connect(string barcode, string mode)
-        {
-            client.SendMessage(username + "@" + hostname, barcode + "," + mode);
         }
     }
 }
