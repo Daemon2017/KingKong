@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using AForge.Video.DirectShow;
+using Sharp.Xmpp;
 using Sharp.Xmpp.Client;
 using System.Drawing.Imaging;
 
@@ -31,7 +32,7 @@ namespace roadTrack
         public Form1()
         {
             InitializeComponent();
-
+                       
             clientXMPP.FileTransferProgress += OnFileTransferProgress;
             clientXMPP.FileTransferAborted += OnFileTransferAborted;
             clientXMPP.FileTransferSettings.ForceInBandBytestreams = true;
@@ -131,7 +132,8 @@ namespace roadTrack
                             string dateTime = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss");
                             inputImage.Save("img-" + dateTime + ".jpg", ImageFormat.Jpeg);
 
-                            clientXMPP.InitiateFileTransfer(username + "@" + hostname + "/server",
+                            Jid toJid = new Jid(hostname, username, "server");
+                            clientXMPP.InitiateFileTransfer(toJid,
                                                             "img-" + dateTime + ".jpg",
                                                             workMode,
                                                             FileTransferCallback);
