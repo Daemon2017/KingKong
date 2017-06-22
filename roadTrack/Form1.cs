@@ -5,16 +5,12 @@ using AForge.Video.DirectShow;
 using Sharp.Xmpp;
 using Sharp.Xmpp.Client;
 using System.Drawing.Imaging;
+using System.IO;
 
 namespace roadTrack
 {
     public partial class Form1 : Form
     {
-        static string hostname = "jabber.ru";
-        static string username = "";
-        static string password = "";
-        static XmppClient clientXMPP = new XmppClient(hostname, username, password, 5222, true);
-
         bool locked = false;
         short lockedFrames = 0;
         bool previousDetection = false;
@@ -29,10 +25,23 @@ namespace roadTrack
         private int statReady = 0;
         private int[] statCount = new int[statLength];
 
+        static XmppClient clientXMPP;
+        string[] xmppConfig = new string[3];
+        string hostname;
+        string username;
+        string password;
+
         public Form1()
         {
             InitializeComponent();
-                       
+
+            xmppConfig = File.ReadAllLines("XMPP.cfg");
+            hostname = xmppConfig[0];
+            username = xmppConfig[1];
+            password = xmppConfig[2];
+
+            clientXMPP = new XmppClient(hostname, username, password, 5222, true);
+
             clientXMPP.FileTransferProgress += OnFileTransferProgress;
             clientXMPP.FileTransferAborted += OnFileTransferAborted;
             clientXMPP.FileTransferSettings.ForceInBandBytestreams = true;
@@ -64,7 +73,8 @@ namespace roadTrack
             timer1.Start();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void Form1_Load(object sender, 
+                                EventArgs e)
         {
             try
             {

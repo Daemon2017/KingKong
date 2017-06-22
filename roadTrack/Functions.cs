@@ -95,8 +95,6 @@ namespace roadTrack
                 }
             }
 
-            GC.Collect();
-
             if (contours.Length != 0)
             {
                 HierarchyIndex[] myHierarchy = new HierarchyIndex[1];
@@ -142,8 +140,7 @@ namespace roadTrack
 
         private OpenCvSharp.Point[][] SmoothContour(OpenCvSharp.Point[][] contours, int largestContourIndex)
         {
-            OpenCvSharp.Point[][] smoothedContour;
-            smoothedContour = new OpenCvSharp.Point[1][];
+            OpenCvSharp.Point[][] smoothedContour = new OpenCvSharp.Point[1][];
             smoothedContour[0] = new OpenCvSharp.Point[4];
 
             smoothedContour[0][0].X = Convert.ToInt32(contours[largestContourIndex][0].X);
